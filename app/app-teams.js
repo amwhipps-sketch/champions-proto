@@ -84,9 +84,10 @@ function teamDetailCoverageHtml(members){
 function showTeamList(){teamView='list';renderTeams()}
 function showTeamBack(){
   if(typeof appNavContext!=='undefined'&&appNavContext.teamSource==='home'){
-    appNavContext.teamSource='list';
-    if(typeof dashNav==='function')dashNav('dash');
-    return;
+    appNavContext.teamSource='list';if(typeof dashNav==='function')dashNav('dash');return;
+  }
+  if(typeof appNavContext!=='undefined'&&appNavContext.teamSource==='profile'){
+    appNavContext.teamSource='list';if(typeof dashNav==='function')dashNav('profile');return;
   }
   showTeamList();
 }

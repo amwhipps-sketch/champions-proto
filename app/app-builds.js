@@ -302,9 +302,10 @@ async function upd(t,m,b,a){var u=new URL(API+'/rest/v1/'+t);Object.entries(m).f
 function showBuildList(){buildView='list';renderBuilds()}
 function showBuildBack(){
   if(typeof appNavContext!=='undefined'&&appNavContext.buildSource==='home'){
-    appNavContext.buildSource='list';
-    if(typeof dashNav==='function')dashNav('dash');
-    return;
+    appNavContext.buildSource='list';if(typeof dashNav==='function')dashNav('dash');return;
+  }
+  if(typeof appNavContext!=='undefined'&&appNavContext.buildSource==='profile'){
+    appNavContext.buildSource='list';if(typeof dashNav==='function')dashNav('profile');return;
   }
   showBuildList();
 }
