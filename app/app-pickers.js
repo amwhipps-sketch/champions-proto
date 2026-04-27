@@ -910,7 +910,7 @@ function _archPickerRows(){
     html+='<div class="arch-pk-cat"><i class="ph-bold '+_archPkCatIcons[cat]+'"></i>'+cat+'</div>';
     cats[cat].forEach(function(a){
       var sel=edSelArch===a.name;
-      html+='<div class="arch-pk-row'+(sel?' sel':'')+'" onclick="pickArch(\''+a.name.replace(/'/g,"\\'")+'\')">'+
+      html+='<div class="arch-pk-row'+(sel?' sel':'')+'" style="--ac:'+a.color+'" onclick="pickArch(\''+a.name.replace(/'/g,"\\'")+'\')">'+
         '<div class="arch-pk-icon"><i class="ph-bold '+a.icon+'"></i></div>'+
         '<div class="arch-pk-info">'+
           '<div class="arch-pk-name">'+a.name+'</div>'+
