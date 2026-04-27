@@ -580,12 +580,49 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 
 /* Nature hybrid cards (new design) */
 .nat-hybrid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.55rem;padding:.7rem 2rem 5rem}
+/* ── Archetype trigger button (build editor) ── */
+.ed-arch-btn{display:flex;align-items:center;gap:.55rem;padding:.6rem .75rem;border-radius:10px;border:1.5px solid var(--border);background:var(--input-bg);width:100%;font-family:inherit;font-size:.83rem;font-weight:600;color:var(--text);cursor:pointer;transition:all .12s;text-align:left;-webkit-tap-highlight-color:transparent}
+.ed-arch-btn:hover{border-color:var(--border2)}
+.ed-arch-btn.empty{color:var(--muted);font-weight:400}
+.ed-arch-btn:active{transform:scale(.99)}
+
+/* ── Archetype picker sheet ── */
+.arch-pk-sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:78vh;display:flex;flex-direction:column;box-shadow:0 -4px 30px rgba(0,0,0,.25)}
+.arch-pk-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:10px auto 0;flex-shrink:0}
+.arch-pk-head{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1rem .5rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.arch-pk-title{font-size:.95rem;font-weight:800}
+.arch-pk-close{background:none;border:none;font-size:.9rem;color:var(--muted);cursor:pointer;padding:.25rem .4rem;border-radius:6px;font-family:inherit}
+.arch-pk-close:hover{color:var(--text)}
+.arch-pk-list{overflow-y:auto;flex:1;padding:.3rem 0 .5rem}
+.arch-pk-none{padding:.65rem 1.1rem;color:var(--muted);font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .1s}
+.arch-pk-none:hover{background:var(--surface)}
+.arch-pk-none.sel{color:var(--red);font-weight:700;background:var(--red-bg)}
+.arch-pk-cat{padding:.55rem 1.1rem .2rem;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);display:flex;align-items:center;gap:.35rem}
+.arch-pk-row{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 1.1rem;cursor:pointer;transition:background .1s}
+.arch-pk-row:hover{background:var(--surface)}
+.arch-pk-row.sel{background:var(--red-bg)}
+.arch-pk-icon{width:32px;height:32px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--text2);flex-shrink:0;margin-top:.05rem}
+.arch-pk-row.sel .arch-pk-icon{background:var(--red-bg2);color:var(--red)}
+.arch-pk-info{flex:1;min-width:0}
+.arch-pk-name{font-size:.85rem;font-weight:700;line-height:1.2}
+.arch-pk-desc{font-size:.7rem;color:var(--muted);line-height:1.4;margin-top:.1rem}
+.arch-pk-check{color:var(--red);flex-shrink:0;margin-top:.2rem}
+.arch-pk-custom{border-top:1px solid var(--border);padding:.65rem 1.1rem;flex-shrink:0;padding-bottom:calc(.65rem + env(safe-area-inset-bottom))}
+.arch-pk-custom-label{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);display:flex;align-items:center;gap:.3rem;margin-bottom:.4rem}
+.arch-pk-custom-row{display:flex;gap:.5rem}
+.arch-pk-custom-input{flex:1;padding:.5rem .75rem;border-radius:9px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);font-family:inherit;font-size:.82rem;min-width:0}
+.arch-pk-custom-input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.arch-pk-custom-btn{padding:.5rem .85rem;border-radius:9px;border:none;background:var(--red);color:#fff;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;flex-shrink:0}
+
+/* ── Archetype reference page ── */
 .ref-arch-list{padding:.7rem 2rem 5rem}
-.ref-arch-cat{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:.9rem 0 .35rem;display:flex;align-items:center;gap:.4rem}
+.ref-arch-cat{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:.9rem 0 .35rem;display:flex;align-items:center;gap:.38rem}
 .ref-arch-cat:first-child{margin-top:.2rem}
 .ref-arch-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.75rem .9rem;margin-bottom:.45rem;transition:border-color .15s}
 .ref-arch-card:hover{border-color:var(--border2)}
-.ref-arch-name{font-size:.88rem;font-weight:800;color:var(--text);margin-bottom:.2rem}
+.ref-arch-card-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.25rem}
+.ref-arch-icon{width:30px;height:30px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:.88rem;color:var(--text2);flex-shrink:0}
+.ref-arch-name{font-size:.88rem;font-weight:800;color:var(--text)}
 .ref-arch-desc{font-size:.76rem;color:var(--muted);line-height:1.45}
 .nat-hybrid{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:.75rem .7rem .65rem;cursor:pointer;transition:border-color .12s,transform .1s}
 .nat-hybrid:hover{border-color:var(--border2)}
