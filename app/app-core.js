@@ -196,7 +196,15 @@ async function rm(t,m,a){var u=new URL(API+'/rest/v1/'+t);Object.entries(m).forE
 // ═══════════════════════════════════════
 
 
-function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('tbLight').classList.toggle('active',t==='light');document.getElementById('tbDark').classList.toggle('active',t==='dark')}
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('tbLight').classList.toggle('active',t==='light');
+  document.getElementById('tbDark').classList.toggle('active',t==='dark');
+  var ml=document.getElementById('msTbLight'),md=document.getElementById('msTbDark');
+  if(ml)ml.classList.toggle('active',t==='light');
+  if(md)md.classList.toggle('active',t==='dark');
+  try{localStorage.setItem('champions_theme',t);}catch(e){}
+}
 
 // #SECTION: SIDEBAR & PAGE NAVIGATION
 // ═══════════════════════════════════════
