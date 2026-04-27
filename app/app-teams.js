@@ -53,7 +53,16 @@ function teamDetailCoverageHtml(members){
 }
 
 function showTeamList(){teamView='list';renderTeams()}
-function showTeamDetail(id){
+function showTeamBack(){
+  if(typeof appNavContext!=='undefined'&&appNavContext.teamSource==='home'){
+    appNavContext.teamSource='list';
+    if(typeof dashNav==='function')dashNav('dash');
+    return;
+  }
+  showTeamList();
+}
+function showTeamDetail(id,source){
+  if(typeof appNavContext!=='undefined')appNavContext.teamSource=source||'list';
   detailTeamId=id;
   teamView='detail';
   tdCoverageOpen=false;
@@ -630,7 +639,7 @@ function renderTeamDetail(c){
 
   // Header with Edit + overflow menu
 var hdr='<div class="pg-head"><div class="vh-title-row">'+
-      '<span class="vh-back" onclick="showTeamList()">← '+t.name+'</span>'+
+      '<span class="vh-back" onclick="showTeamBack()">← '+t.name+'</span>'+
       '<div class="vh-actions" onclick="event.stopPropagation()">'+
         '<button class="vh-btn vh-btn-sm vh-btn-edit" onclick="showTeamEditor(\''+t.id+'\')" aria-label="Edit team">✏️</button>'+
         '<div class="om-wrap">'+
