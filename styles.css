@@ -303,7 +303,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 /* Tags + moves rows */
 .bld-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.55rem}
 .btag{padding:2px 8px;border-radius:6px;font-size:.62rem;font-weight:700;white-space:nowrap}
-.btag-fmt{background:var(--blue-bg);color:var(--blue)}.btag-arch{background:var(--red-bg);color:var(--red)}
+.btag-fmt{background:var(--blue-bg);color:var(--blue)}.btag-arch{background:color-mix(in srgb,var(--ac,var(--red)) 12%,var(--surface));color:var(--ac,var(--red));border:1px solid color-mix(in srgb,var(--ac,var(--red)) 30%,transparent)}
 .btag-item{background:var(--gold-bg);color:var(--gold)}.btag-nat{background:var(--green-bg);color:var(--green)}
 .btag-abi{background:var(--purple-bg);color:var(--purple)}
 .bld-moves{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:.5rem}
@@ -600,9 +600,9 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 .arch-pk-cat{padding:.55rem 1.1rem .2rem;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);display:flex;align-items:center;gap:.35rem}
 .arch-pk-row{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 1.1rem;cursor:pointer;transition:background .1s}
 .arch-pk-row:hover{background:var(--surface)}
-.arch-pk-row.sel{background:var(--red-bg)}
-.arch-pk-icon{width:32px;height:32px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--text2);flex-shrink:0;margin-top:.05rem}
-.arch-pk-row.sel .arch-pk-icon{background:var(--red-bg2);color:var(--red)}
+.arch-pk-icon{width:32px;height:32px;border-radius:8px;background:color-mix(in srgb,var(--ac,#94a3b8) 12%,var(--surface2));display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--ac,var(--text2));flex-shrink:0;margin-top:.05rem}
+.arch-pk-row.sel{background:color-mix(in srgb,var(--ac,var(--red)) 8%,var(--surface))}
+.arch-pk-row.sel .arch-pk-icon{background:color-mix(in srgb,var(--ac,var(--red)) 20%,var(--surface2));color:var(--ac,var(--red))}
 .arch-pk-info{flex:1;min-width:0}
 .arch-pk-name{font-size:.85rem;font-weight:700;line-height:1.2}
 .arch-pk-desc{font-size:.7rem;color:var(--muted);line-height:1.4;margin-top:.1rem}
@@ -621,7 +621,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 .ref-arch-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.75rem .9rem;margin-bottom:.45rem;transition:border-color .15s}
 .ref-arch-card:hover{border-color:var(--border2)}
 .ref-arch-card-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.25rem}
-.ref-arch-icon{width:30px;height:30px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:.88rem;color:var(--text2);flex-shrink:0}
+.ref-arch-icon{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb,var(--ac,#94a3b8) 12%,var(--surface2));display:flex;align-items:center;justify-content:center;font-size:.88rem;color:var(--ac,var(--text2));flex-shrink:0}
 .ref-arch-name{font-size:.88rem;font-weight:800;color:var(--text)}
 .ref-arch-desc{font-size:.76rem;color:var(--muted);line-height:1.45}
 .nat-hybrid{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:.75rem .7rem .65rem;cursor:pointer;transition:border-color .12s,transform .1s}
