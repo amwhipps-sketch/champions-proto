@@ -108,10 +108,11 @@
 
   <!-- Reference (Abilities + Natures) — Drop G -->
   <div class="page" id="pg-reference">
-    <div class="pg-head"><div class="pg-title"><i class="ph-bold ph-books"></i>Reference</div><div class="pg-sub">Abilities &amp; Natures</div></div>
+    <div class="pg-head"><div class="pg-title"><i class="ph-bold ph-books"></i>Reference</div><div class="pg-sub">Abilities, Natures &amp; Archetypes</div></div>
     <div class="ref-tab-bar" id="refTabBar">
       <button class="ref-tab active" data-tab="abilities" onclick="switchRefTab('abilities')"><i class="ph-bold ph-lightning"></i> Abilities <span class="ref-tab-count" id="ablCount">—</span></button>
       <button class="ref-tab" data-tab="natures" onclick="switchRefTab('natures')"><i class="ph-bold ph-dna"></i> Natures <span class="ref-tab-count">25</span></button>
+      <button class="ref-tab" data-tab="archetypes" onclick="switchRefTab('archetypes')"><i class="ph-bold ph-target"></i> Archetypes <span class="ref-tab-count">22</span></button>
     </div>
     <div class="ref-pane" id="refAbilitiesPane">
       <div class="ref-mode-bar">
@@ -132,6 +133,12 @@
         <input class="search-box" id="natSearch" placeholder="Search natures…" oninput="onNatSearch(this.value)">
       </div>
       <div class="nat-hybrid-grid" id="natHybridGrid"><div class="empty"><div class="em">⏳</div>Loading…</div></div>
+    </div>
+    <div class="ref-pane" id="refArchetypesPane" style="display:none">
+      <div class="ref-search-block">
+        <input class="search-box" id="archRefSearch" placeholder="Search archetypes…" oninput="onArchRefSearch(this.value)">
+      </div>
+      <div class="ref-arch-list" id="archRefGrid"><div class="empty"><div class="em">⏳</div>Loading…</div></div>
     </div>
   </div>
 
