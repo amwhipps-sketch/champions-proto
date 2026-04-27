@@ -1385,16 +1385,25 @@ function teamImageHtml(t,members,author,memberSpriteUrls,memberItemUrls){
     memHtml+='<div class="tc-mem tc-mem-empty"><span class="tc-mem-empty-icon">+</span></div>';
   }
 
+  // Team Identity
+  var _tcThemeColors={Crimson:'#ef4444',Ocean:'#3b82f6',Storm:'#8b5cf6',Forest:'#22c55e',Gold:'#f59e0b',Shadow:'#64748b',Frost:'#06b6d4',Ember:'#f97316'};
+  var tcThemeCol=t.team_theme&&_tcThemeColors[t.team_theme]?_tcThemeColors[t.team_theme]:null;
+  var tcIconEl=t.team_icon?'<span style="font-size:22px;margin-right:7px;line-height:1;vertical-align:middle">'+pubEscape(t.team_icon)+'</span>':'';
+  var tcArchEl=t.team_archetype?'<span class="imgcard-tc-arch-chip">'+pubEscape(t.team_archetype)+'</span>':'';
+  var tcThemeOverlay=tcThemeCol?'<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 20%,'+tcThemeCol+'38 0%,transparent 55%);pointer-events:none;z-index:0"></div>':'';
+
   var authorHandle=author&&author.username?author.username:'anon';
   var url=buildShareUrl('team',t.share_code);
 
   return (
     '<div class="imgcard imgcard-tc">'+
+      tcThemeOverlay+
       '<div class="imgcard-brand"><div class="imgcard-brand-mk">⚡</div><span>Champions Forge</span></div>'+
       '<div class="imgcard-tc-team-head">'+
-        '<div class="imgcard-tc-team-name">'+pubEscape(t.name||'Unnamed team')+'</div>'+
+        '<div class="imgcard-tc-team-name">'+tcIconEl+pubEscape(t.name||'Unnamed team')+'</div>'+
         '<div class="imgcard-tc-team-meta">'+
           (t.format?'<span class="imgcard-tc-team-chip">'+pubEscape(t.format)+'</span>':'')+
+          tcArchEl+
           '<span>'+visibleMembers.length+' / '+rosterSize+' · by <strong style="color:#fff">@'+pubEscape(authorHandle)+'</strong></span>'+
         '</div>'+
       '</div>'+
@@ -1465,7 +1474,7 @@ async function shareImageClientSide(kind,id){
     }else if(kind==='team'){
       var t=allTeams?allTeams.find(function(x){return x.id===id}):null;
       if(!t){
-        var trows=await q('teams',{id:'eq.'+id,select:'id,name,user_id,format,share_code,share_fields,roster_size'},true);
+        var trows=await q('teams',{id:'eq.'+id,select:'id,name,user_id,format,share_code,share_fields,roster_size,team_icon,team_theme,team_archetype'},true);
         t=trows&&trows[0];
       }
       if(!t){toast('Team not found','err');return}
