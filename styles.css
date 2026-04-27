@@ -825,6 +825,24 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 .tml-meta{display:flex;align-items:center;gap:.4rem;margin-top:3px;flex-wrap:wrap}
 .tml-fmt{padding:2px 8px;border-radius:6px;font-size:.65rem;font-weight:700}
 .tml-count{font-size:.7rem;color:var(--muted);font-weight:600}
+.tml-icon-badge{font-size:1rem;line-height:1;margin-right:.2rem;vertical-align:-.1em;flex-shrink:0}
+.tml-arch-pill{display:inline-block;padding:.1rem .42rem;border-radius:999px;background:var(--surface2);border:1px solid var(--border);font-size:.58rem;font-weight:700;color:var(--muted);letter-spacing:.02em;text-transform:uppercase;white-space:nowrap}
+
+/* Team Identity editor */
+.ti-card{margin-top:.65rem}
+.ti-optional{font-size:.62rem;color:var(--muted);font-weight:400;margin-left:.3rem;text-transform:none;letter-spacing:0}
+.ti-section{margin-top:.5rem}
+.ti-section-last{margin-bottom:.1rem}
+.ti-section-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.28rem}
+.ti-picker{display:flex;gap:.3rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.2rem}
+.ti-picker::-webkit-scrollbar{display:none}
+.ti-chip{padding:.28rem .6rem;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;transition:all .12s;-webkit-tap-highlight-color:transparent;line-height:1.2}
+.ti-chip:active{transform:scale(.95)}
+.ti-icon-chip{font-size:1.05rem;padding:.28rem .42rem;min-width:36px;text-align:center}
+.ti-icon-chip.active{border-color:var(--red);background:var(--red-bg)}
+.ti-arch-chip.active{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.ti-theme-chip{border-color:color-mix(in srgb,var(--tc,var(--border)) 40%,var(--border))}
+.ti-theme-chip.active{background:color-mix(in srgb,var(--tc,var(--red)) 12%,var(--surface));border-color:var(--tc,var(--red));color:var(--tc,var(--red));font-weight:700}
   .tml-members{display:flex;gap:.5rem;margin:.45rem 0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
 .tml-members::-webkit-scrollbar{display:none}
   .tml-mem{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:68px}
