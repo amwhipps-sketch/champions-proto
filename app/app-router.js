@@ -1375,6 +1375,7 @@ function teamImageHtml(t,members,author,memberSpriteUrls,memberItemUrls){
         '</div>'+
         '<div class="tc-mem-middle">'+
           (m.ability?'<div class="tc-mem-ability">'+pubEscape(m.ability)+'</div>':'')+
+          (m.archetype?'<div class="tc-mem-archetype">'+pubEscape(m.archetype)+'</div>':'')+
           itemRow+
         '</div>'+
         '<div class="tc-mem-moves">'+moveHtml+'</div>'+
@@ -1482,7 +1483,7 @@ async function shareImageClientSide(kind,id){
       // Fetch team_builds with nested build + pokemon + get moves/ability/item for each member
       var membersRaw=await q('team_builds',{
         team_id:'eq.'+t.id,
-        select:'slot_position,builds(id,name,is_public,share_code,is_shiny,pokemon_id,ability,item_id,move_1,move_2,move_3,move_4,pokemon(id,name,type_1,type_2,image_url,shiny_url))',
+        select:'slot_position,builds(id,name,is_public,share_code,is_shiny,pokemon_id,ability,archetype,item_id,move_1,move_2,move_3,move_4,pokemon(id,name,type_1,type_2,image_url,shiny_url))',
         order:'slot_position.asc'
       },needsAuth).catch(function(){return[]});
 
@@ -1515,6 +1516,7 @@ async function shareImageClientSide(kind,id){
           is_shiny:!!bu.is_shiny,
           pk_id:pk.id,pk_name:pk.name,type_1:pk.type_1,type_2:pk.type_2,image_url:pk.image_url,shiny_url:pk.shiny_url,
           ability:bu.ability||'',
+          archetype:bu.archetype||null,
           item_name:itemRow?itemRow.name:null,
           item_sprite_url:itemRow?itemRow.sprite_url:null,
           move_1:bu.move_1,move_2:bu.move_2,move_3:bu.move_3,move_4:bu.move_4,
