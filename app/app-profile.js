@@ -686,6 +686,9 @@ var allAch=[],userAch={},userProfile=null;
 var _likesReceivedCount=0; // Drop I.3: cached total likes on own content
 // Drop I.2: friends state
 var allFriends=[],pendingFriends=[],_frRowOpen=false,_ffTab='search',_ffQrDone=false;
+// Profile section state
+var profAchFilter='all'; // 'all'|'unlocked'|'locked'|'nearly'
+var profAchOpen=true,profActOpen=true,profAccOpen=false;
 
 async function loadAchievements(){try{allAch=await q('achievements',{order:'sort_order.asc'});return allAch}catch(e){return[]}}
 async function loadUserAch(){if(!tk)return;try{var rows=await q('user_achievements',{select:'achievement_id,unlocked_at'},true);userAch={};rows.forEach(function(r){userAch[r.achievement_id]=r.unlocked_at})}catch(e){}}
@@ -809,6 +812,33 @@ async function checkAchievements(){
   renderProfile();
 }
 
+function togProfSection(sec){
+  if(sec==='ach')profAchOpen=!profAchOpen;
+  else if(sec==='act')profActOpen=!profActOpen;
+  else if(sec==='acc')profAccOpen=!profAccOpen;
+  renderProfile();
+}
+function setProfAchFilter(f){profAchFilter=f;renderProfile();}
+function _profSection(key,title,badge,open,content){
+  return '<div class="prof-section">'+
+    '<div class="prof-sec-hdr" onclick="togProfSection(\''+key+'\')">'+
+      '<div class="prof-sec-left">'+title+(badge?' <span class="prof-sec-badge">'+badge+'</span>':'')+'</div>'+
+      '<span class="prof-sec-chev'+(open?' open':'')+'">▾</span>'+
+    '</div>'+
+    '<div class="prof-sec-body'+(open?' open':'')+'">'+content+'</div>'+
+  '</div>';
+}
+function openBuildFromProfile(id){
+  if(typeof appNavContext!=='undefined')appNavContext.buildSource='profile';
+  if(typeof showBuildDetail==='function')showBuildDetail(id);
+  if(typeof dashNav==='function')dashNav('builds');
+}
+function openTeamFromProfile(id){
+  if(typeof appNavContext!=='undefined')appNavContext.teamSource='profile';
+  if(typeof showTeamDetail==='function')showTeamDetail(id);
+  if(typeof dashNav==='function')dashNav('teams');
+}
+
 function renderProfile(){
   var c=document.getElementById('profileContent');
 if(!usr){
@@ -839,24 +869,51 @@ if(!usr){
     ?'<div class="tc-username"><span class="tc-un-at">@</span>'+userProfile.username+'<button class="tc-un-edit" onclick="showUsernameModal(null)" title="Change username">✏️</button></div>'
     :'<button class="tc-un-set" onclick="showUsernameModal(null)">Set username →</button>';
   var card='<input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarFile(this)"><div class="trainer-card"><div class="tc-wm">'+pb(200)+'</div><div class="tc-top"><div class="tc-avatar" onclick="triggerAvatarUpload()">'+avHtml+'<div class="av-overlay">📷 Change</div></div><div class="tc-info"><div class="tc-label">Trainer</div><h2>'+dn+'</h2><div class="tc-email">'+usr.email+'</div><div class="name-edit"><input id="dnInput" value="'+dn+'" placeholder="Display name"><button onclick="saveDisplayName()">Save</button></div>'+unDisplay+'</div></div><div class="tc-stats"><div class="tc-stat"><div class="tc-sv" style="color:#22c55e">'+obtC+'</div><div class="tc-sl">Obtained</div></div><div class="tc-stat"><div class="tc-sv" style="color:#8b5cf6">'+shC+'</div><div class="tc-sl">Shinies</div></div><div class="tc-stat"><div class="tc-sv" style="color:#3b82f6">'+blC+'</div><div class="tc-sl">Builds</div></div><div class="tc-stat"><div class="tc-sv" style="color:#f59e0b">'+tmC+'</div><div class="tc-sl">Teams</div></div><div class="tc-stat"><div class="tc-sv" style="color:#ef4444">'+achUnlocked+'<span style="font-size:.8rem;opacity:.5">/'+allAch.length+'</span></div><div class="tc-sl">Achievements</div></div></div></div>';
+  // Social summary stats
+  var _friendCount=allFriends.filter(function(f){return f.status==='accepted';}).length;
+  var _pubBuilds=allBuilds.filter(function(b){return b.is_public;}).length;
+  var _pubTeams=allTeams.filter(function(t){return t.is_public;}).length;
+  var socialHtml='<div class="prof-social-stats">'+
+    '<div class="prof-ss-item"><div class="prof-ss-val">'+_friendCount+'</div><div class="prof-ss-lbl">Friends</div></div>'+
+    '<div class="prof-ss-item"><div class="prof-ss-val">'+_likesReceivedCount+'</div><div class="prof-ss-lbl">Likes Received</div></div>'+
+    '<div class="prof-ss-item"><div class="prof-ss-val">'+_pubBuilds+'</div><div class="prof-ss-lbl">Public Builds</div></div>'+
+    '<div class="prof-ss-item"><div class="prof-ss-val">'+_pubTeams+'</div><div class="prof-ss-lbl">Public Teams</div></div>'+
+  '</div>';
+
   // Achievements
-  var achHtml='<h3 style="font-size:1.05rem;font-weight:700;margin-top:1.5rem;display:flex;align-items:center;gap:.4rem">🏆 Achievements <span style="font-size:.78rem;color:var(--muted);font-weight:500">'+achUnlocked+' / '+allAch.length+' unlocked</span></h3>';
-  // Drop I.1: expanded categories + colours
   var catOrder=['collection','shiny','builds','teams','items','milestones','moves','nature','competitive','explorer','social'];
   var catLabels={collection:'Collection',shiny:'Shiny',builds:'Builds',teams:'Teams',items:'Items',milestones:'Milestones',moves:'Moves',nature:'Nature',competitive:'Competitive',explorer:'Explorer',social:'Social'};
   var catColors={collection:'#22c55e',shiny:'#a78bfa',builds:'#f97316',teams:'#3b82f6',items:'#f59e0b',milestones:'#94a3b8',moves:'#ef4444',nature:'#14b8a6',competitive:'#6366f1',explorer:'#d97706',social:'#ec4899'};
-  // Boolean check_types that don't have a meaningful progress value
   var _boolChecks={full_team:true,max_stat:true,full_sp:true,both_formats:true,mega_builds:true};
-  achHtml+=catOrder.map(function(cat){
-    var items=allAch.filter(function(a){return a.category===cat});if(!items.length)return'';
+
+  // Filter pills
+  var achFilterHtml='<div class="prof-ach-filters">'+
+    [{k:'all',l:'All'},{k:'unlocked',l:'Unlocked'},{k:'locked',l:'Locked'},{k:'nearly',l:'Nearly There'}].map(function(f){
+      return '<button class="prof-ach-pill'+(profAchFilter===f.k?' active':'')+'" onclick="setProfAchFilter(\''+f.k+'\')">'+f.l+'</button>';
+    }).join('')+
+  '</div>';
+
+  var achGridHtml=catOrder.map(function(cat){
+    var items=allAch.filter(function(a){
+      if(a.category!==cat)return false;
+      if(profAchFilter==='unlocked')return!!userAch[a.id];
+      if(profAchFilter==='locked')return!userAch[a.id];
+      if(profAchFilter==='nearly'){
+        if(userAch[a.id])return false;
+        if(_boolChecks[a.check_type])return false;
+        if(_achProg[a.check_type]===undefined||a.threshold<=1)return false;
+        return _achProg[a.check_type]/a.threshold>=0.5;
+      }
+      return true;
+    });
+    if(!items.length)return'';
     var cc=catColors[cat]||'var(--muted)';
-    return'<div style="margin-top:1rem">'+
+    return'<div style="margin:.8rem 0 0;padding:0 1rem">'+
       '<span class="ach-cat-hdr" style="color:'+cc+'">'+catLabels[cat]+'</span>'+
       '<div class="ach-grid">'+items.map(function(a){
         var unlocked=!!userAch[a.id];
         var dt=unlocked?new Date(userAch[a.id]):null;
         var dateStr=dt?dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
-        // Progress bar for locked threshold achievements
         var progHtml='';
         if(!unlocked&&!_boolChecks[a.check_type]&&_achProg[a.check_type]!==undefined&&a.threshold>1){
           var cur=Math.min(_achProg[a.check_type],a.threshold);
@@ -865,30 +922,41 @@ if(!usr){
         }
         return'<div class="ach-card '+(unlocked?'unlocked':'locked')+'" style="'+(unlocked?'border-color:'+cc+'22':'')+'">'+
           '<div class="ach-icon">'+a.icon+'</div>'+
-          '<div class="ach-info">'+
-            '<div class="ach-name">'+a.name+'</div>'+
-            '<div class="ach-desc">'+a.description+'</div>'+
-            progHtml+
-            (unlocked?'<div class="ach-date">Unlocked '+dateStr+'</div>':'')+'</div></div>'
+          '<div class="ach-info"><div class="ach-name">'+a.name+'</div><div class="ach-desc">'+a.description+'</div>'+progHtml+(unlocked?'<div class="ach-date">Unlocked '+dateStr+'</div>':'')+'</div></div>'
       }).join('')+'</div></div>'
   }).join('');
+  if(!achGridHtml)achGridHtml='<div class="empty" style="padding:2rem 1rem"><div class="em">🔍</div>No achievements match this filter</div>';
+  var achSectionHtml=_profSection('ach','🏆 Achievements',achUnlocked+' / '+allAch.length+' unlocked',profAchOpen,achFilterHtml+achGridHtml+'<div style="height:.8rem"></div>');
   // Recent Activity
-  var actHtml='<h3 style="font-size:1.05rem;font-weight:700;margin-top:1.5rem;display:flex;align-items:center;gap:.4rem">📝 Recent Activity</h3><div class="activity-list">';
-  var acts=allBuilds.slice(0,5).map(function(b){var bImg=b.is_shiny&&b.shiny_url?b.shiny_url:(b.image_url||'');return{img:bImg,text:'Created build: '+b.build_name,time:b.created_at}});
-  allTeams.slice(0,3).forEach(function(t){acts.push({img:'',text:'Created team: '+t.name,time:t.created_at})});
-  acts.sort(function(a,b){return new Date(b.time)-new Date(a.time)});
-  actHtml+=acts.slice(0,8).map(function(a){var d=new Date(a.time);var ds=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});return'<div class="act-item">'+(a.img?'<img src="'+a.img+'" onerror="this.style.display=\'none\'">':'<div style="width:36px;height:36px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0">🏆</div>')+'<span class="act-text">'+a.text+'</span><span class="act-time">'+ds+'</span></div>'}).join('')||'<div style="color:var(--muted);font-size:.85rem">No activity yet</div>';
-  actHtml+='</div>';
-  var accountHtml=
-    '<div class="prof-account-section">'+
-      '<h3 style="font-size:1.05rem;font-weight:700;margin-top:1.5rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem">⚙️ Account</h3>'+
-      '<div class="prof-account-btns">'+
-        '<button class="btn btn-ghost prof-signout-btn" onclick="logout()"><i class="ph-bold ph-sign-out"></i> Sign Out</button>'+
-        '<button class="btn prof-delete-btn" onclick="confirmDeleteAccount()"><i class="ph-bold ph-trash"></i> Delete Account</button>'+
-      '</div>'+
-      '<p class="prof-delete-hint">Deleting your account permanently removes all your builds, teams, and Pokédex progress.</p>'+
+  var _acts=allBuilds.slice(0,5).map(function(b){var bImg=b.is_shiny&&b.shiny_url?b.shiny_url:(b.image_url||'');return{img:bImg,text:b.build_name,sub:'Build',time:b.created_at,id:b.id,kind:'build'};});
+  allTeams.slice(0,3).forEach(function(t){_acts.push({img:'',text:t.name,sub:'Team',time:t.created_at,id:t.id,kind:'team'});});
+  _acts.sort(function(a,b){return new Date(b.time)-new Date(a.time)});
+  var actItems=_acts.slice(0,8).map(function(a){
+    var d=new Date(a.time);var ds=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    var onclick=a.kind==='build'?'openBuildFromProfile(\''+a.id+'\')':'openTeamFromProfile(\''+a.id+'\')';
+    var icon=a.kind==='build'
+      ?(a.img?'<img src="'+a.img+'" onerror="this.style.opacity=\'0.2\'">'
+             :'<div class="act-placeholder"><i class="ph-bold ph-sword"></i></div>')
+      :'<div class="act-placeholder"><i class="ph-bold ph-trophy"></i></div>';
+    return'<div class="act-item" onclick="'+onclick+'">'+icon+
+      '<div class="act-info"><span class="act-text">'+a.text+'</span><span class="act-sub">'+a.sub+'</span></div>'+
+      '<span class="act-time">'+ds+'</span>'+
+      '<i class="ph-bold ph-caret-right act-chev"></i>'+
     '</div>';
-  c.innerHTML=card+renderFriendsRow()+achHtml+actHtml+accountHtml;
+  }).join('')||'<div class="empty" style="padding:1.5rem"><div class="em">📝</div>No activity yet</div>';
+  var actSectionHtml=_profSection('act','📝 Recent Activity','',profActOpen,'<div class="activity-list" style="padding:.4rem 1rem .6rem">'+actItems+'</div>');
+  var accountHtml=_profSection('acc','⚙️ Account','',profAccOpen,
+    '<div class="prof-account-actions">'+
+      '<div class="prof-account-row"><span class="prof-account-email"><i class="ph-bold ph-envelope"></i> '+usr.email+'</span></div>'+
+      '<button class="btn btn-ghost prof-signout-btn" onclick="logout()"><i class="ph-bold ph-sign-out"></i> Sign Out</button>'+
+    '</div>'+
+    '<div class="prof-danger-card">'+
+      '<div class="prof-danger-label"><i class="ph-bold ph-warning"></i> Danger Zone</div>'+
+      '<p class="prof-delete-hint">Permanently removes all your builds, teams, Pokédex progress, and account data.</p>'+
+      '<button class="btn prof-delete-btn" onclick="confirmDeleteAccount()"><i class="ph-bold ph-trash"></i> Delete Account</button>'+
+    '</div>'+
+  '<div style="height:.5rem"></div>');
+  c.innerHTML=card+socialHtml+renderFriendsRow()+achSectionHtml+actSectionHtml+accountHtml;
 updProfileNavIcon();
 }
 
