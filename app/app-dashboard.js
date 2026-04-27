@@ -335,11 +335,11 @@ function _renderFeedRow(ev){
 
 // Tap handlers — open existing detail views
 function _openFeedBuild(id){
-  if(allBuilds.find(function(x){return x.id===id;})){showBuildDetail(id);dashNav('builds');}
+  if(allBuilds.find(function(x){return x.id===id;})){showBuildDetail(id,'home');dashNav('builds');}
   else if(typeof showPublicBuildById==='function')showPublicBuildById(id);
 }
 function _openFeedTeam(id){
-  if(allTeams.find(function(x){return x.id===id;})){showTeamDetail(id);dashNav('teams');}
+  if(allTeams.find(function(x){return x.id===id;})){showTeamDetail(id,'home');dashNav('teams');}
   else if(typeof showPublicTeamById==='function')showPublicTeamById(id);
 }
 

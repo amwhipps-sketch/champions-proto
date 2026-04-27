@@ -245,6 +245,13 @@ function setTheme(t){document.documentElement.setAttribute('data-theme',t);docum
 
 
 var sbC=false;
+
+// ── Navigation context ────────────────────────────────────
+// Tracks where a detail view was opened from so the back
+// button can return to the right place.
+// source values: 'list' (default) | 'home' (dashboard feed)
+var appNavContext={buildSource:'list',teamSource:'list'};
+
 function togSb(){sbC=!sbC;document.getElementById('sb').classList.toggle('c',sbC);document.getElementById('sbTog').textContent=sbC?'▶':'◀'}
 document.querySelectorAll('.sb-item').forEach(function(i){
   i.addEventListener('click',function(){
@@ -265,6 +272,9 @@ document.querySelectorAll('.sb-item').forEach(function(i){
     i.classList.add('active');
     document.querySelectorAll('.page').forEach(function(p){p.classList.remove('show')});
     document.getElementById('pg-'+target).classList.add('show');
+    // Bottom nav smart reset: tapping Builds/Teams while in detail returns to list
+    if(target==='builds'&&typeof buildView!=='undefined'&&buildView==='detail'){buildView='list';renderBuilds();}
+    if(target==='teams'&&typeof teamView!=='undefined'&&teamView==='detail'){teamView='list';renderTeams();}
   })
 });
 
