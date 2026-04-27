@@ -613,6 +613,10 @@ async function renderPublicProfile(username){
 }
 async function pubSendFriendRequest(toId){
   if(!usr){showLoginModal('Sign in to add friends');return;}
+  if(!userProfile||!userProfile.username){
+    if(typeof showUsernameModal==='function')showUsernameModal(function(){pubSendFriendRequest(toId);});
+    return;
+  }
   var btn=document.getElementById('pubAfBtn');if(!btn)return;
   btn.disabled=true;btn.textContent='Sending…';
   try{
