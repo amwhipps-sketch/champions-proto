@@ -14,6 +14,8 @@ loadUser=async function(){await Promise.all([loadBuilds(),loadTeamRoster(),loadU
 // can render properly. Subsequent hash changes are handled by the router itself.
 // ═══════════════════════════════════════
 var _onPublicRoute=!!(window._championsRouter&&_championsRouter.parseHash(location.hash));
+// Restore saved theme preference
+try{var _st=localStorage.getItem('champions_theme');if(_st==='light'||_st==='dark')setTheme(_st);}catch(e){}
 restoreSession();updAuth();loadPkmn();loadItems();loadNatures();loadAbilities();loadMoveIndex();loadAchievements();loadAllPkmnAbilities();
 if(usr){loadUser()}else if(!_onPublicRoute){maybeShowInitialAuthPrompt()}
 if(window._championsRouter)_championsRouter.init();
