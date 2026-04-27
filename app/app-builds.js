@@ -188,7 +188,16 @@ var statNames={hp:'HP',atk:'ATTACK',def:'DEFENSE',spa:'SP. ATK',spd:'SP. DEF',sp
 async function upd(t,m,b,a){var u=new URL(API+'/rest/v1/'+t);Object.entries(m).forEach(function(e){u.searchParams.set(e[0],e[1])});var r=await authFetch(u.toString(),{method:'PATCH',headers:Object.assign(h(a),{'Prefer':'return=representation'}),body:JSON.stringify(b)},a);if(!r.ok){var e=await r.json().catch(function(){return{}});throw new Error(e.message||r.status)}return r.json()}
 
 function showBuildList(){buildView='list';renderBuilds()}
-function showBuildDetail(id){detailBuildId=id;buildView='detail';
+function showBuildBack(){
+  if(typeof appNavContext!=='undefined'&&appNavContext.buildSource==='home'){
+    appNavContext.buildSource='list';
+    if(typeof dashNav==='function')dashNav('dash');
+    return;
+  }
+  showBuildList();
+}
+function showBuildDetail(id,source){detailBuildId=id;buildView='detail';
+  if(typeof appNavContext!=='undefined')appNavContext.buildSource=source||'list';
   // Ensure builds page is active
   document.querySelectorAll('.sb-item').forEach(function(n){n.classList.toggle('active',n.dataset.p==='builds')});
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('show')});
@@ -1028,7 +1037,7 @@ function renderBuildDetail(c){
 
   // Header — standardised .vh-* pattern matching Teams detail
   var hdr='<div class="pg-head"><div class="vh-title-row">'+
-    '<span class="vh-back" onclick="showBuildList()">← '+(b.pokemon_name||'?')+'</span>'+
+    '<span class="vh-back" onclick="showBuildBack()">← '+(b.pokemon_name||'?')+'</span>'+
     '<div class="vh-actions" onclick="event.stopPropagation()">'+
       '<button class="vh-btn vh-btn-sm vh-btn-edit" onclick="showBuildEditor(\''+b.id+'\')" aria-label="Edit build">✏️</button>'+
       '<div class="om-wrap">'+
