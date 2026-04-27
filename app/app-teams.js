@@ -12,6 +12,35 @@ var tdCollapsed={}; // {buildId: true} means collapsed — persists across re-re
 var tmCoverageOpen=false; // Editor-only collapsible coverage summary state
 var tdCoverageOpen=false; // Detail-only collapsible coverage summary state
 
+// ── Team Identity ─────────────────────────────────────────
+var TM_ICONS=['🔥','⚡','💧','🌿','❄️','🌑','🌟','🛡️','⚔️','🎯','💎','🐉'];
+var TM_THEMES=['Crimson','Ocean','Storm','Forest','Gold','Shadow','Frost','Ember'];
+var TM_THEME_COLORS={Crimson:'#ef4444',Ocean:'#3b82f6',Storm:'#8b5cf6',Forest:'#22c55e',Gold:'#f59e0b',Shadow:'#64748b',Frost:'#06b6d4',Ember:'#f97316'};
+var TM_ARCHETYPES=['Hyper Offense','Balance','Stall','Weather','Trick Room','VoltTurn','Sand','Rain','Sun','Speed Control'];
+var tmSelIcon='',tmSelTheme='',tmSelArch='';
+
+function selTI(field,val){
+  if(field==='icon'){tmSelIcon=tmSelIcon===val?'':val;}
+  else if(field==='theme'){tmSelTheme=tmSelTheme===val?'':val;}
+  else if(field==='arch'){tmSelArch=tmSelArch===val?'':val;}
+  var pickerId={icon:'tiIconPicker',theme:'tiThemePicker',arch:'tiArchPicker'}[field];
+  var el=document.getElementById(pickerId);if(!el)return;
+  el.innerHTML=_tiChips(field);
+}
+function _tiChips(field){
+  if(field==='icon')return TM_ICONS.map(function(v){return'<button class="ti-chip ti-icon-chip'+(v===tmSelIcon?' active':'')+'" onclick="selTI(\'icon\',\''+v+'\')" type="button">'+v+'</button>';}).join('');
+  if(field==='theme')return TM_THEMES.map(function(v){var col=TM_THEME_COLORS[v]||'#888';return'<button class="ti-chip ti-theme-chip'+(v===tmSelTheme?' active':'')+'" onclick="selTI(\'theme\',\''+v+'\')" type="button" style="--tc:'+col+'">'+v+'</button>';}).join('');
+  return TM_ARCHETYPES.map(function(v){return'<button class="ti-chip ti-arch-chip'+(v===tmSelArch?' active':'')+'" onclick="selTI(\'arch\',\''+v+'\')" type="button">'+v+'</button>';}).join('');
+}
+function tmIdentityHtml(){
+  return '<div class="card ti-card">'+
+    '<div class="ed-label" style="margin-top:0">✨ Team Identity <span class="ti-optional">optional</span></div>'+
+    '<div class="ti-section"><div class="ti-section-label">Icon</div><div class="ti-picker" id="tiIconPicker">'+_tiChips('icon')+'</div></div>'+
+    '<div class="ti-section"><div class="ti-section-label">Theme</div><div class="ti-picker" id="tiThemePicker">'+_tiChips('theme')+'</div></div>'+
+    '<div class="ti-section ti-section-last"><div class="ti-section-label">Archetype</div><div class="ti-picker" id="tiArchPicker">'+_tiChips('arch')+'</div></div>'+
+  '</div>';
+}
+
 function toggleTeamEditorCoverage(){tmCoverageOpen=!tmCoverageOpen;renderTeams()}
 
 function teamEditorCoverageHtml(){
@@ -84,9 +113,13 @@ function showTeamEditor(id){
     if(t&&t.members)selBuildIds=t.members.map(function(m){return m.build_id});
     else selBuildIds=[];
     teamRosterSize=Math.max(selBuildIds.length,Math.min(6,Number(t&&t.roster_size)||6));
+    tmSelIcon=t&&t.team_icon||'';
+    tmSelTheme=t&&t.team_theme||'';
+    tmSelArch=t&&t.team_archetype||'';
   }else{
     selBuildIds=[];
     teamRosterSize=6;
+    tmSelIcon='';tmSelTheme='';tmSelArch='';
   }
   renderTeams()
 }
@@ -401,13 +434,18 @@ function renderTeams(){
     var mems=visibleMembers.map(function(m){var mImg=m.is_shiny&&m.shiny_url?m.shiny_url:(m.image_url||'');return '<div class="tml-mem"><img class="tml-mem-img" src="'+mImg+'" onerror="this.style.opacity=\'0.2\'"><div class="tml-mem-name">'+(m.pokemon_name||'?')+'</div></div>'}).join('');
     for(var i=visibleMembers.length;i<rosterSize;i++){mems+='<div class="tml-mem"><div class="tml-mem-empty">+</div></div>'}
     var safeName=t.name.replace(/'/g,"\\'");
-    return '<div class="tml-card" onclick="showTeamDetail(\''+t.id+'\')">'+
+    var tmCol=t.team_theme?TM_THEME_COLORS[t.team_theme]||null:null;
+    var tmCardStyle=tmCol?'border-left:3px solid '+tmCol+';':'';
+    var tmIcon=t.team_icon?'<span class="tml-icon-badge">'+t.team_icon+'</span>':'';
+    var tmArch=t.team_archetype?'<span class="tml-arch-pill">'+t.team_archetype+'</span>':'';
+    return '<div class="tml-card" style="'+tmCardStyle+'" onclick="showTeamDetail(\''+t.id+'\')">'+
 '<div class="tml-head">'+
   '<div class="tml-head-text">'+
-    '<div class="tml-name">'+t.name+'</div>'+
+    '<div class="tml-name">'+tmIcon+t.name+'</div>'+
     '<div class="tml-meta">'+
       '<span class="tml-fmt '+fc+'">'+(t.format||'?')+'</span>'+
       '<span class="tml-count">'+memCount+' / '+rosterSize+'</span>'+
+      tmArch+
     '</div>'+
   '</div>'+
 '<div class="vh-actions">'+
@@ -564,17 +602,23 @@ function removeTeamMember(buildId){var i=selBuildIds.indexOf(buildId);if(i!==-1)
 
 function renderTeamEditor(c){
   var t=editTeamId?allTeams.find(function(x){return x.id===editTeamId}):null;
+  // Snapshot live editor values before re-render so slot changes don't wipe unsaved text
+  var _ne=document.getElementById('tmName'),_no2=document.getElementById('tmNotes'),_nf=document.getElementById('tmFmt');
+  var liveName=_ne!==null?_ne.value:(t?t.name||'':'');
+  var liveNotes=_no2!==null?_no2.value:(t?t.notes||'':'');
+  var liveFmt=_nf!==null?_nf.value:(t?t.format||'Singles':'Singles');
+
   var hdr='<div class="pg-head"><div class="pg-top"><div><div class="pg-title" style="cursor:pointer" onclick="showTeamList()">← '+(t?'Edit Team':'New Team')+'</div><div class="pg-sub">Assemble your roster</div></div></div></div>';
-  var fmtSelectedS=t&&t.format==='Singles'?' selected':'';
-  var fmtSelectedD=t&&t.format==='Doubles'?' selected':'';
-  var fmtCls=(t&&t.format==='Doubles')?'fmt-d':'fmt-s';
+  var fmtSelectedS=liveFmt==='Singles'?' selected':'';
+  var fmtSelectedD=liveFmt==='Doubles'?' selected':'';
+  var fmtCls=liveFmt==='Doubles'?'fmt-d':'fmt-s';
   teamRosterSize=Math.max(selBuildIds.length,Math.min(6,teamRosterSize||Number(t&&t.roster_size)||6));
-  var fmtLabel=t&&t.format?t.format:'Singles';
+  var fmtLabel=liveFmt||'Singles';
 
   // Team Info card
   var teamInfo='<div class="card">'+
     '<label class="ed-label" style="margin-top:0">Team Name</label>'+
-    '<input class="ed-input" id="tmName" value="'+(t?(t.name||'').replace(/"/g,'&quot;'):'')+'" placeholder="e.g. Storm Surge Protocol">'+
+    '<input class="ed-input" id="tmName" value="'+liveName.replace(/"/g,'&quot;')+'" placeholder="e.g. Storm Surge Protocol">'+
     '<label class="ed-label">Format</label>'+
     '<select class="ed-select" id="tmFmt"><option value="Singles"'+fmtSelectedS+'>Singles</option><option value="Doubles"'+fmtSelectedD+'>Doubles</option></select>'+
     '<label class="ed-label">Roster Size</label>'+
@@ -583,7 +627,7 @@ function renderTeamEditor(c){
     '</select>'+
     '<div style="font-size:.68rem;color:var(--muted);margin-top:.35rem">Defaults to 6. Use 4 for compact doubles rosters or practice squads.</div>'+ 
     '<label class="ed-label">Notes</label>'+
-    '<textarea class="ed-textarea" id="tmNotes" placeholder="Strategy, matchups, meta notes...">'+(t?t.notes||'':'')+'</textarea>'+
+    '<textarea class="ed-textarea" id="tmNotes" placeholder="Strategy, matchups, meta notes...">'+liveNotes+'</textarea>'+
   '</div>';
 
   // Build members in order of selBuildIds
@@ -613,6 +657,7 @@ function renderTeamEditor(c){
 
   c.innerHTML=hdr+'<div class="td-stack" style="padding-bottom:6rem">'+
     teamInfo+
+    tmIdentityHtml()+
     '<div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 .2rem;margin-top:.3rem"><div style="font-weight:800;font-size:.9rem">Roster <span style="color:var(--muted);font-weight:500;font-size:.78rem;margin-left:.3rem">'+selBuildIds.length+' / '+teamRosterSize+'</span></div><span class="td-fmt '+fmtCls+'">'+fmtLabel+'</span></div>'+
     viewToggle+
     memberCards+
@@ -636,9 +681,13 @@ function renderTeamDetail(c){
   var fc=t.format==='Singles'?'fmt-s':'fmt-d';
   var rosterSize=Math.max((t.members||[]).length,Math.min(6,Number(t.roster_size)||6));
   var safeName=t.name.replace(/'/g,"\\'");
+  var tdThemeCol=t.team_theme?TM_THEME_COLORS[t.team_theme]||null:null;
+  var tdHeadStyle=tdThemeCol?'border-bottom:2px solid '+tdThemeCol+';':'';
+  var tdIcon=t.team_icon?'<span style="font-size:1rem;margin-right:.25rem;opacity:.9">'+t.team_icon+'</span>':'';
+  var tdArch=t.team_archetype?'<span class="tml-arch-pill" style="margin-left:.35rem">'+t.team_archetype+'</span>':'';
 
   // Header with Edit + overflow menu
-var hdr='<div class="pg-head"><div class="vh-title-row">'+
+var hdr='<div class="pg-head" style="'+tdHeadStyle+'"><div class="vh-title-row">'+
       '<span class="vh-back" onclick="showTeamBack()">← '+t.name+'</span>'+
       '<div class="vh-actions" onclick="event.stopPropagation()">'+
         '<button class="vh-btn vh-btn-sm vh-btn-edit" onclick="showTeamEditor(\''+t.id+'\')" aria-label="Edit team">✏️</button>'+
@@ -652,7 +701,7 @@ var hdr='<div class="pg-head"><div class="vh-title-row">'+
         '</div>'+
       '</div>'+
     '</div>'+
-    '<div class="pg-sub">'+(t.format||'')+' · '+(t.members||[]).length+' / '+rosterSize+' members</div>'+
+    '<div class="pg-sub">'+tdIcon+(t.format||'')+' · '+(t.members||[]).length+' / '+rosterSize+' members'+tdArch+'</div>'+
   '</div>';
 
   var members='';
@@ -701,7 +750,7 @@ async function saveTeam(){
   var name=document.getElementById('tmName').value.trim();if(!name){toast('Enter a team name','err');return}
   var sizeEl=document.getElementById('tmRosterSize');
   var rosterSize=Math.max(selBuildIds.length,Math.min(6,Number(sizeEl&&sizeEl.value)||teamRosterSize||6));
-  var body={user_id:usr.id,name:name,format:document.getElementById('tmFmt').value,notes:document.getElementById('tmNotes').value||null,status:'Testing',roster_size:rosterSize};
+  var body={user_id:usr.id,name:name,format:document.getElementById('tmFmt').value,notes:document.getElementById('tmNotes').value||null,status:'Testing',roster_size:rosterSize,team_icon:tmSelIcon||null,team_theme:tmSelTheme||null,team_archetype:tmSelArch||null};
   try{var tid;
   // On edit we replace the roster links so slot order stays in sync with the current picker state.
   if(editTeamId){await upd('teams',{'id':'eq.'+editTeamId},body,true);tid=editTeamId;await rm('team_builds',{'team_id':'eq.'+tid},true)}
