@@ -503,7 +503,7 @@ async function renderPublicTeam(code){
     var rows=await q('teams',{
       share_code:'eq.'+code,
       is_public:'eq.true',
-      select:'id,name,user_id,format,share_fields,created_at'
+      select:'id,name,user_id,format,share_fields,roster_size,created_at'
     },needsAuth);
     if(!rows||!rows.length){host.innerHTML=pubNotFoundHtml('team');return}
     var t=rows[0];
@@ -730,8 +730,10 @@ function pubBuildFullHtml(b,author,pk,item,nature,movesMeta,sf,likeData){
 }
 
 function pubTeamFullHtml(t,author,members,sf,likeData){
+  var rosterSize=Math.max(members.length,Math.min(6,t.roster_size||6));
+  var visibleMembers=members.slice(0,rosterSize);
   var memberCardsHtml='';
-  members.forEach(function(m){
+  visibleMembers.forEach(function(m){
     var spriteUrl=m.is_shiny&&m.shiny_url?m.shiny_url:m.image_url;
     var sprite=spriteUrl?'<img class="pt-mem-sprite" src="'+pubEscape(spriteUrl)+'" alt="'+pubEscape(m.pk_name||'')+'">':'';
     var t1=m.type_1,t2=m.type_2;
@@ -757,6 +759,9 @@ function pubTeamFullHtml(t,author,members,sf,likeData){
       '</div>'
     );
   });
+  for(var i=visibleMembers.length;i<rosterSize;i++){
+    memberCardsHtml+='<div class="pt-mem pt-mem-empty-slot"><span class="pt-mem-empty-icon">+</span></div>';
+  }
   if(!memberCardsHtml){
     memberCardsHtml='<div class="pt-empty">No members</div>';
   }
@@ -774,13 +779,13 @@ function pubTeamFullHtml(t,author,members,sf,likeData){
           '<div class="pt-hero-name">'+pubEscape(t.name||'Unnamed team')+'</div>'+
           '<div class="pt-hero-meta">'+
             (t.format?'<span class="pt-hero-chip"><strong>'+pubEscape(t.format)+'</strong></span>':'')+
-            '<span class="pt-hero-chip">'+members.length+' member'+(members.length===1?'':'s')+'</span>'+
+            '<span class="pt-hero-chip">'+visibleMembers.length+' member'+(visibleMembers.length===1?'':'s')+'</span>'+
           '</div>'+
           '<div class="pub-author">'+pubByline(author)+'</div>'+
         '</div>'+
       '</div>'+
       '<div class="pub-section">'+
-        '<div class="pub-section-head"><span>Roster</span><span class="count">'+members.length+' / 6</span></div>'+
+        '<div class="pub-section-head"><span>Roster</span><span class="count">'+visibleMembers.length+' / '+rosterSize+'</span></div>'+
         '<div class="pt-roster">'+memberCardsHtml+'</div>'+
       '</div>'+
       coverageHtml+
@@ -1330,7 +1335,9 @@ function buildImageHtml(b,pk,item,nature,movesMeta,author,spriteDataUrl,itemData
 
 // Team image card HTML (1200×630)
 function teamImageHtml(t,members,author,memberSpriteUrls,memberItemUrls){
-  var memHtml=members.map(function(m,idx){
+  var rosterSize=Math.max(members.length,Math.min(6,t.roster_size||6));
+  var visibleMembers=members.slice(0,rosterSize);
+  var memHtml=visibleMembers.map(function(m,idx){
     var spriteUrl=memberSpriteUrls[m.build_id]||'';
     var itemUrl=memberItemUrls[m.build_id]||'';
     var spriteImg=spriteUrl?'<img class="tc-mem-sprite" src="'+spriteUrl+'" alt="">':'';
@@ -1374,6 +1381,9 @@ function teamImageHtml(t,members,author,memberSpriteUrls,memberItemUrls){
       '</div>'
     );
   }).join('');
+  for(var i=visibleMembers.length;i<rosterSize;i++){
+    memHtml+='<div class="tc-mem tc-mem-empty"><span class="tc-mem-empty-icon">+</span></div>';
+  }
 
   var authorHandle=author&&author.username?author.username:'anon';
   var url=buildShareUrl('team',t.share_code);
@@ -1385,7 +1395,7 @@ function teamImageHtml(t,members,author,memberSpriteUrls,memberItemUrls){
         '<div class="imgcard-tc-team-name">'+pubEscape(t.name||'Unnamed team')+'</div>'+
         '<div class="imgcard-tc-team-meta">'+
           (t.format?'<span class="imgcard-tc-team-chip">'+pubEscape(t.format)+'</span>':'')+
-          '<span>'+members.length+' members · by <strong style="color:#fff">@'+pubEscape(authorHandle)+'</strong></span>'+
+          '<span>'+visibleMembers.length+' / '+rosterSize+' · by <strong style="color:#fff">@'+pubEscape(authorHandle)+'</strong></span>'+
         '</div>'+
       '</div>'+
       '<div class="imgcard-tc-grid">'+memHtml+'</div>'+
@@ -1455,7 +1465,7 @@ async function shareImageClientSide(kind,id){
     }else if(kind==='team'){
       var t=allTeams?allTeams.find(function(x){return x.id===id}):null;
       if(!t){
-        var trows=await q('teams',{id:'eq.'+id,select:'id,name,user_id,format,share_code,share_fields'},true);
+        var trows=await q('teams',{id:'eq.'+id,select:'id,name,user_id,format,share_code,share_fields,roster_size'},true);
         t=trows&&trows[0];
       }
       if(!t){toast('Team not found','err');return}
