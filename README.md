@@ -6,7 +6,7 @@
 
 [Live app](https://otterlyclueless.github.io/champions-forge/) · [Admin](https://otterlyclueless.github.io/champions-forge/admindb.html)
 
-[![Support on Ko-fi](icons/kofi-badge.svg)](https://ko-fi.com/championsforge)
+[![Support on Ko-fi](icons/kofi-badge.svg)](https://ko-fi.com/otterlyclueless)
 
 ![PWA](https://img.shields.io/badge/PWA-installable-4c51bf?style=flat-square)
 ![Stack](https://img.shields.io/badge/stack-vanilla_HTML_JS_CSS-f59e0b?style=flat-square)
