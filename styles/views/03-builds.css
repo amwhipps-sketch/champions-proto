@@ -1,105 +1,687 @@
-/* #SECTION: BUILDS */
-/* ═══════ BUILDS ═══════ */
+/* ════════════════════════════════════════════════════════════════════════════
+   03-builds.css — Build Editor view styles
+   Champions Forge · vanilla CSS · dark-first design system
+   ════════════════════════════════════════════════════════════════════════════ */
 
-/* Build list — vertical stack matching Teams (.tml-stack) */
-.bld-stack{padding:.9rem 1rem 1.5rem;display:flex;flex-direction:column;gap:.75rem}
-/* Art header hidden on mobile — shown on desktop */
-.bld-art{display:none}
-/* Mini stats + move pills hidden on mobile */
-.bld-mini-stats{display:none}
-.bld-move-pills{display:none}
-/* Desktop wrap: column on mobile */
-.bd-desktop-wrap{display:flex;flex-direction:column;gap:.85rem}
-.bd-left,.bd-right{display:flex;flex-direction:column;gap:.85rem}
-.bld-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer;transition:border-color .15s;position:relative}
-.bld-card:active{border-color:var(--border2);transform:scale(.995)}
-.bld-card.fav-card{border-color:color-mix(in srgb,var(--gold) 40%,var(--border))}
-/* Card header: sprite + info left, actions right */
-.bld-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem}
-.bld-head-left{display:flex;align-items:center;gap:.65rem;flex:1;min-width:0}
-.bld-head-img{width:52px;height:52px;object-fit:contain;border-radius:12px;background:var(--surface);padding:4px;flex-shrink:0}
-.bld-head-text{flex:1;min-width:0}
-.bld-name{font-weight:800;font-size:.92rem;line-height:1.15;display:flex;align-items:center;gap:5px}
-.bld-name .fav-star{color:var(--gold);font-size:.8rem}
-.bld-pkmn{font-size:.68rem;color:var(--muted);font-weight:600;margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-/* Tags + moves rows */
-.bld-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.55rem}
-.btag{padding:2px 8px;border-radius:6px;font-size:.62rem;font-weight:700;white-space:nowrap}
-.btag-fmt{background:var(--blue-bg);color:var(--blue)}.btag-arch{background:color-mix(in srgb,var(--ac,var(--red)) 12%,var(--surface));color:var(--ac,var(--red));border:1px solid color-mix(in srgb,var(--ac,var(--red)) 30%,transparent)}
-.btag-item{background:var(--gold-bg);color:var(--gold)}.btag-nat{background:var(--green-bg);color:var(--green)}
-.btag-abi{background:var(--purple-bg);color:var(--purple)}
-.bld-moves{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:.5rem}
-.bmove{padding:5px 8px;border-radius:7px;background:var(--surface);font-size:.7rem;font-weight:600;color:var(--text2);text-align:center}
-/* Legacy .sec-hdr kept for backward compat */
-.sec-hdr{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;flex-wrap:wrap;gap:.5rem}
-.sec-hdr h2{font-size:1.05rem;font-weight:700}
+/* ── Page layout ─────────────────────────────────────────────────────────── */
+.ed-body {
+  padding: .75rem .9rem 120px;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
 
-/* Build detail — stacked layout (.bd-*) */
-.bd-stack{padding:.9rem .9rem 1.5rem;display:flex;flex-direction:column;gap:.85rem}
-/* Hero art — shared sizing for builds + pokédex detail */
-.bd-hero{text-align:center;padding:1.2rem 1rem .8rem;border-radius:16px;position:relative;overflow:hidden;min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.bd-hero-dex{position:absolute;top:-6px;right:-6px;font-size:5rem;font-weight:900;opacity:.07;pointer-events:none;line-height:1;font-family:monospace;z-index:0}
-.bd-hero img{width:140px;height:140px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.3));position:relative;z-index:2}
-.bd-hero-types{margin-top:.5rem;display:flex;gap:5px;justify-content:center;position:relative;z-index:2}
-.bd-hero-types .type-pill{font-size:.7rem;padding:3px 12px}
-.bd-hero.shiny-holo{border:none}
-.bd-hero.shiny-holo::before{content:'';position:absolute;inset:-3px;border-radius:18px;background:linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3,#54a0ff,#5f27cd,#ff6b6b);background-size:300% 300%;animation:holoShift 4s ease infinite;z-index:0;opacity:.7}
-.bd-shiny-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:var(--purple-bg);color:var(--purple);font-size:.68rem;font-weight:700;margin-top:.35rem;position:relative;z-index:2}
-/* Summary strip */
-.bd-summary{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;font-size:.72rem;padding-left:.2rem}
-/* Config grid */
-.bd-config{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:.82rem}
-.bd-config-label{color:var(--muted);font-weight:600;font-size:.72rem}
-.bd-config-val{font-weight:700;font-size:.82rem}
-/* Moves — Drop E: type-matched gradients, name only */
-.bd-moves{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.bd-move{position:relative;min-height:48px;border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:.82rem;letter-spacing:-0.01em;overflow:hidden}
-.bd-move-typed{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 2px 8px rgba(0,0,0,.18)}
-.bd-move-typed .bd-move-name{position:relative;z-index:1}
-.bd-move-empty{background:var(--surface);color:var(--muted);font-weight:600;border:1px dashed var(--border)}
-.bd-move-plain{background:var(--surface);color:var(--text2);font-weight:700}
-/* Strategy (collapsible) */
-.bd-strategy summary{font-size:.85rem;font-weight:800;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
-.bd-strategy summary::after{content:'▸';color:var(--muted);font-size:.8rem;transition:transform .2s}
-.bd-strategy[open] summary::after{transform:rotate(90deg)}
-.bd-strat-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem}
-.bd-strat-text{font-size:.8rem;color:var(--text2);line-height:1.5}
-/* SP progress bar (detail view) */
-.bd-sp-bar-wrap{display:flex;align-items:center;gap:.5rem;margin-top:6px}
-.bd-sp-label{font-size:.65rem;color:var(--muted);font-weight:600;flex-shrink:0}
-.bd-sp-track{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
-.bd-sp-fill{height:100%;border-radius:3px;background:var(--blue)}
-.bd-sp-val{font-size:.72rem;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums;flex-shrink:0}
+/* ── Selected Pokémon card (.sel-*) ──────────────────────────────────────── */
+.sel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: .7rem .85rem;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+.sel-sprite {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.sel-info {flex: 1; min-width: 0;}
+.sel-name  {font-size: .88rem; font-weight: 800; color: var(--text);}
+.sel-types {display: flex; gap: .3rem; margin-top: .3rem;}
+.type-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: .62rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .02em;
+}
+.sel-change {
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--accent);
+  border: none;
+  background: none;
+  cursor: pointer;
+}
 
-/* Subsection: Build editor */
-.editor{padding:1rem 2rem 2rem}
-.ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
-/* Desktop 2-column layout: stat calc left (sticky), build details right */
-.ed-desktop-layout{display:flex;flex-direction:column;gap:1rem;margin-top:1rem}
-.ed-left-col,.ed-right-col{display:flex;flex-direction:column;gap:1rem}
-.ed-left-col>.ed-card,.ed-right-col>.ed-card,.ed-right-col>details{margin-top:0!important}
-.ed-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem}
-.ed-card h3{font-size:.9rem;font-weight:700;margin-bottom:.8rem}
-.ed-label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem;margin-top:.6rem}
-.ed-input,.ed-select,.ed-textarea{width:100%;padding:.5rem .7rem;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-family:inherit;font-size:.83rem}
-.ed-input:focus,.ed-select:focus,.ed-textarea:focus{outline:none;border-color:var(--red)}
-.ed-select{cursor:pointer}.ed-textarea{resize:vertical;min-height:50px}
-.ed-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
-/* Subsection: SP sliders */
-.sp-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
-.sp-name{width:52px;font-size:.72rem;font-weight:600;color:var(--muted)}
-.sp-slider{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:var(--surface2);outline:none}
-.sp-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--text);cursor:pointer;border:2px solid var(--bg2)}
-.sp-pm{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-family:inherit}
-.sp-pm:hover{border-color:var(--red);color:var(--red)}
-.sp-val{width:36px;text-align:center;font-weight:700;font-size:.8rem;padding:2px;border-radius:5px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-family:inherit}
-.sp-remain{text-align:right;font-size:1.3rem;font-weight:900;color:var(--green)}
-.sp-over{color:var(--red)!important}
-/* Subsection: Pokémon picker grid */
-.pk-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:.5rem;max-height:400px;overflow-y:auto;margin-top:.4rem;padding:.3rem}
-.pk-pick{display:flex;flex-direction:column;align-items:center;padding:.4rem;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s}
-.pk-pick:hover{border-color:var(--red)}.pk-pick.selected{border-color:var(--green);background:var(--green-bg)}
-.pk-pick img{width:48px;height:48px;object-fit:contain}
-.pk-pick span{font-size:.58rem;font-weight:600;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;margin-top:2px}
+/* ── Item section ────────────────────────────────────────────────────────── */
+.item-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: .6rem .8rem;
+}
+.item-label {
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: .4rem;
+}
+.item-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: .45rem .65rem;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.item-btn:hover:not(.locked) {border-color: var(--subtle);}
+.item-btn img {width: 26px; height: 26px; object-fit: contain;}
+.item-btn-name {flex: 1; text-align: left; font-size: .78rem; font-weight: 700;}
+.item-btn .caret {color: var(--muted); font-size: .75rem;}
 
- 
+/* ── Stat section (.stat-*) ──────────────────────────────────────────────── */
+.stat-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.stat-inner {padding: .7rem .8rem;}
+.stat-poke-head {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: .45rem .65rem;
+  margin-bottom: .55rem;
+}
+.stat-poke-sprite {width: 36px; height: 36px; object-fit: contain;}
+.stat-poke-name {
+  font-size: .8rem;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+.stat-poke-ability {font-size: .65rem; color: var(--muted); margin-top: 1px;}
+
+/* View toggle */
+.view-tog {
+  display: flex;
+  background: var(--bg);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 2px;
+  margin-bottom: .55rem;
+}
+.view-btn {
+  flex: 1;
+  padding: .28rem;
+  border: none;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: .68rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted);
+  transition: background .15s, color .15s;
+}
+.view-btn.active {background: var(--surface2); color: var(--text);}
+
+/* ── Stat bars (.bs-*) ───────────────────────────────────────────────────── */
+.bs-grid {display: flex; flex-direction: column; gap: .32rem;}
+.bs-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 44px 14px;
+  align-items: center;
+  gap: .4rem;
+}
+.bs-label {font-size: .62rem; font-weight: 700; color: var(--muted);}
+.bs-track-wrap {position: relative; height: 7px;}
+.bs-base-track {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 3.5px;
+  overflow: visible;
+}
+.bs-base-fill {
+  height: 100%;
+  border-radius: 3.5px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: width .35s ease;
+  z-index: 1;
+}
+.bs-val {
+  font-size: .7rem;
+  font-weight: 800;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bs-nat {font-size: .58rem; text-align: center;}
+
+/* BST row */
+.bs-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: .5rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--border);
+}
+.bs-total-label {font-size: .68rem; color: var(--muted); font-weight: 600;}
+.bst-val       {font-size: .88rem; font-weight: 900;}
+.bst-high      {color: #4ade80;}
+.bst-elite     {color: #2dd4bf;}
+
+/* ── SP sliders (.dsp-*) ─────────────────────────────────────────────────── */
+.dsp-section  {margin-top: .6rem;}
+.dsp-hd       {display: flex; justify-content: space-between; align-items: center; margin-bottom: .4rem;}
+.dsp-title    {font-size: .7rem; font-weight: 800; color: var(--text);}
+.dsp-remain   {
+  font-size: .75rem;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  background: rgba(74,222,128,.12);
+  color: #4ade80;
+}
+.dsp-remain-label {font-size: .62rem; color: var(--muted); margin-left: .25rem;}
+.dsp-row {
+  display: grid;
+  grid-template-columns: 26px 20px 1fr 20px 28px;
+  align-items: center;
+  gap: .28rem;
+  margin-bottom: .22rem;
+}
+.dsp-name {font-size: .62rem; font-weight: 700;}
+.dsp-pm {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: .8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.dsp-pm:active {background: var(--border);}
+.dsp-track {height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;}
+.dsp-fill  {height: 100%; border-radius: 2px;}
+.dsp-val {
+  width: 28px;
+  font-size: .7rem;
+  font-weight: 800;
+  text-align: center;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+}
+
+/* ── Editor picker cards (.epc-*) ────────────────────────────────────────── */
+.ip-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 200;
+  opacity: 0;
+  transition: opacity .25s;
+}
+#itemPickerSheet.open .ip-overlay {opacity: 1;}
+#itemPickerSheet {display: none; position: fixed; inset: 0; z-index: 200;}
+.ip-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform .26s cubic-bezier(.32,1,.4,1);
+  z-index: 201;
+}
+#itemPickerSheet.open .ip-sheet {transform: translateY(0);}
+.ip-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: .6rem auto .3rem;
+}
+.ip-head {
+  display: flex;
+  align-items: center;
+  padding: .3rem 1rem .5rem;
+  gap: .5rem;
+}
+.ip-title {flex: 1; font-size: .92rem; font-weight: 800; color: var(--text);}
+.ip-close {
+  background: var(--surface2);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ip-search-wrap {padding: 0 1rem .5rem;}
+.ip-search {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .45rem .75rem;
+  color: var(--text);
+  font-family: inherit;
+  font-size: .82rem;
+}
+.ip-search:focus {outline: none; border-color: var(--subtle);}
+.ip-cat-tabs {
+  display: flex;
+  gap: .35rem;
+  padding: 0 1rem .45rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ip-cat-tabs::-webkit-scrollbar {display: none;}
+.ip-cat-tab {
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: .22rem .7rem;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--muted);
+  font-family: inherit;
+  cursor: pointer;
+}
+.ip-body {flex: 1; overflow-y: auto; padding: 0 1rem 1rem;}
+.ip-section {margin-bottom: .75rem;}
+.ip-section-label {
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: .35rem;
+}
+.ip-cards {display: flex; flex-direction: column; gap: .3rem;}
+.epc-card {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: .45rem .65rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .15s, background .15s;
+  text-align: left;
+  width: 100%;
+}
+.epc-card:active {background: var(--border);}
+.epc-sprite {width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;}
+.epc-info {flex: 1; min-width: 0;}
+.epc-name {
+  display: block;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.epc-badges {display: flex; gap: .3rem; margin-top: 2px;}
+.epc-cost {
+  font-size: .58rem;
+  font-weight: 700;
+  background: rgba(74,222,128,.12);
+  color: #4ade80;
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+.epc-acq {
+  font-size: .58rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+.ip-empty {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--muted);
+  padding: 2rem 0;
+}
+
+/* ── Overflow menu (.om-*) ───────────────────────────────────────────────── */
+.om-wrap {position: relative;}
+.om-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .3rem .2rem;
+  min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  z-index: 100;
+  display: none;
+}
+.om-menu.open {display: block;}
+.om-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .42rem .65rem;
+  border-radius: 8px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text);
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  font-family: inherit;
+}
+.om-item:hover {background: var(--surface2);}
+.om-item.danger {color: var(--red);}
+
+/* ── Save bar ─────────────────────────────────────────────────────────────── */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: .7rem .9rem;
+  display: flex;
+  gap: .55rem;
+}
+.btn {
+  flex: 1;
+  padding: .62rem;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: .83rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+}
+.btn-ghost {background: var(--surface2); color: var(--muted);}
+.btn-red   {background: var(--accent); color: #fff;}
+.btn-primary {background: var(--accent); color: #fff;}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MEGA EVOLUTION STYLES — appended section
+   All selectors prefixed .mega-*, .mfb, .bs-mega-*, .preview-*, .bst-mega-*
+   New CSS variable: --mega, --mega-dim, --mega-border (defined in :root).
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --mega:        #f59e0b;
+  --mega-dim:    rgba(245,158,11,.18);
+  --mega-border: rgba(245,158,11,.3);
+}
+
+/* ── Mega section card ───────────────────────────────────────────────────── */
+.mega-section {
+  border: 1px solid var(--mega-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--mega-dim);
+}
+.mega-head {
+  display: flex;
+  align-items: center;
+  padding: .6rem .85rem;
+  gap: .6rem;
+}
+.mega-icon-wrap {
+  width: 32px;
+  height: 32px;
+  background: rgba(245,158,11,.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mega-icon-wrap img {width: 18px; height: 18px; object-fit: contain;}
+.mega-text  {flex: 1;}
+.mega-title {font-size: .82rem; font-weight: 800; color: var(--mega);}
+.mega-sub   {font-size: .65rem; color: var(--muted); margin-top: 1px;}
+
+/* Toggle switch */
+.mega-tog       {position: relative; width: 42px; height: 24px; flex-shrink: 0;}
+.mega-tog input {opacity: 0; width: 0; height: 0; position: absolute;}
+.tog-track {
+  position: absolute;
+  inset: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.tog-track::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+  background: var(--muted);
+  border-radius: 50%;
+  transition: transform .2s, background .2s;
+}
+.mega-tog input:checked ~ .tog-track {
+  background: rgba(245,158,11,.25);
+  border-color: var(--mega);
+}
+.mega-tog input:checked ~ .tog-track::before {
+  transform: translateX(18px);
+  background: var(--mega);
+}
+
+/* Expanded body — form selector */
+.mega-body {
+  padding: 0 .85rem .7rem;
+  border-top: 1px solid var(--mega-border);
+}
+.mega-form-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding-top: .6rem;
+}
+.mega-form-label {
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  flex-shrink: 0;
+}
+.mega-form-btns {display: flex; gap: .35rem; flex: 1;}
+.mfb {
+  flex: 1;
+  padding: .38rem .5rem;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.mfb img {width: 16px; height: 16px; object-fit: contain;}
+.mfb.active {
+  border-color: var(--mega);
+  background: rgba(245,158,11,.15);
+  color: var(--mega);
+}
+.mfb:hover:not(.active) {border-color: var(--subtle);}
+
+/* ── Item button: locked state ───────────────────────────────────────────── */
+.item-btn.locked {
+  border-color: var(--mega-border);
+  background: var(--mega-dim);
+  cursor: not-allowed;
+  opacity: .9;
+  pointer-events: none;
+}
+.item-btn.locked .item-btn-name {color: var(--text);}
+.item-lock-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: .6rem;
+  font-weight: 700;
+  color: var(--mega);
+  background: rgba(245,158,11,.12);
+  border: 1px solid var(--mega-border);
+  border-radius: 5px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+/* ── Stat section: Mega badge & ability text ─────────────────────────────── */
+.mega-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(245,158,11,.15);
+  border: 1px solid var(--mega-border);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: .58rem;
+  font-weight: 800;
+  color: var(--mega);
+  letter-spacing: .04em;
+}
+.mega-badge img {width: 10px; height: 10px; object-fit: contain;}
+.mega-ability-text {color: var(--mega); font-weight: 700;}
+
+/* ── Preview toggle bar ──────────────────────────────────────────────────── */
+.preview-bar {
+  display: flex;
+  align-items: center;
+  padding: .45rem .7rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  gap: .5rem;
+}
+.preview-label {
+  font-size: .63rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  flex-shrink: 0;
+}
+.preview-btns {
+  display: flex;
+  flex: 1;
+  background: var(--bg);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 2px;
+}
+.preview-btn {
+  flex: 1;
+  padding: .28rem .4rem;
+  border: none;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: .68rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  transition: background .15s, color .15s;
+}
+.preview-btn.active {background: var(--surface2); color: var(--text);}
+.preview-btn.active.mega-active {background: rgba(245,158,11,.2); color: var(--mega);}
+.preview-btn img {width: 12px; height: 12px; object-fit: contain;}
+
+/* ── Mega stat bar overlay ───────────────────────────────────────────────── */
+
+/* Gold extension bar — sits absolutely inside .bs-base-track */
+.bs-mega-fill {
+  height: 100%;
+  border-radius: 0 3.5px 3.5px 0;
+  background: linear-gradient(90deg, rgba(245,158,11,.55) 0%, var(--mega) 100%);
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  transition: left .35s ease, width .35s ease;
+}
+
+/* White marker line at base/mega boundary */
+.bs-base-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: rgba(255,255,255,.35);
+  border-radius: 1px;
+  z-index: 3;
+  transition: left .35s ease;
+}
+
+/* Stat value turns gold when boosted by Mega */
+/* (applied via JS inline style — no class needed; documented here for reference) */
+
+/* BST note */
+.bst-mega-note {
+  font-size: .6rem;
+  color: var(--mega);
+  font-weight: 700;
+  margin-left: .3rem;
+}
+
+/* ── Mega hex polygon ────────────────────────────────────────────────────── */
+/* #ed-hexMegaPoly fill/stroke set in edBuildHex; transition set inline.     */
+/* No additional CSS needed — polygon attributes fully controlled via JS.     */
+
+/* ── Mega item picker card ───────────────────────────────────────────────── */
+.epc-card.epc-mega {
+  border-color: var(--mega-border);
+  background: var(--mega-dim);
+}
+.epc-card.epc-mega .epc-name {color: var(--mega);}
+.epc-card.epc-mega:active {background: rgba(245,158,11,.28);}

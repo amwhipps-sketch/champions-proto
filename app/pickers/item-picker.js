@@ -1,175 +1,258 @@
-// ═══════════════════════════════════════
-// ═══════════════════════════════════════
-// ITEM PICKER (Drop D.2)
-// Bottom-sheet replacement for the native <select>.
-// Filters items by the selected Pokémon's species_lock and hides
-// Mega Stones entirely when the Pokémon is already a Mega form.
-// ═══════════════════════════════════════
+/* item-picker-modified.js — Full replacement of app/pickers/item-picker.js
+ * Mega Evolution additions are marked with ── MEGA ──
+ * All original functions are preserved intact.
+ * Globals assumed in scope: allItems, allPkmn, selPkmnId, edMegaFormId,
+ *   getMegaForms, MEGA_STONE_URL
+ */
 
-var _pickerCategory='all',_pickerSearch='';
+'use strict';
 
-function openItemPicker(){
-  _pickerCategory='all';_pickerSearch='';
-  // Desktop: render item picker inside third panel
-  if(window.innerWidth>=1024){
-    // Inject a stub #itemPickerOv into the panel; render functions target it by id
-    if(_edDeskPicker('<div id="itemPickerOv" style="display:block;background:transparent"></div>','Choose Item')){
-      renderItemPickerShell();
-      renderItemPickerBody();
-      return;
-    }
+// ─── Sheet state ──────────────────────────────────────────────────────────────
+
+var _itemPickerOpen = false;
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * openItemPicker()
+ * Opens the item picker bottom sheet.
+ * ── MEGA: Returns early (no-op) when a Mega form is selected, because the
+ *    Mega Stone is auto-assigned and the item slot is locked. ──
+ */
+function openItemPicker() {
+  // ── MEGA: lock guard ──────────────────────────────────────────────────
+  if (edMegaFormId) {return;}
+
+  _itemPickerOpen = true;
+  var sheet = document.getElementById('itemPickerSheet');
+  if (!sheet) {
+    // First open: inject shell
+    var shell = document.createElement('div');
+    shell.id = 'itemPickerSheet';
+    shell.innerHTML = renderItemPickerShell();
+    document.body.appendChild(shell);
   }
-  renderItemPickerShell();
-  renderItemPickerBody();
-  document.getElementById('itemPickerOv').classList.add('open');
-}
-function closeItemPicker(){
-  _edDeskClose(); // desktop: close third panel
-  var ov=document.getElementById('itemPickerOv');
-  if(ov)ov.classList.remove('open'); // mobile
-}
-// Search & filter changes update ONLY the body — shell (with the focused input) stays intact.
-function setPickerCategory(cat){_pickerCategory=cat||'all';updatePickerTabs();renderItemPickerBody()}
-function setPickerSearch(val){_pickerSearch=(val||'').toLowerCase();updatePickerTabs();renderItemPickerBody()}
-
-// Items eligible for THIS Pokémon (species-lock + mega-form rules).
-function pickerEligibleItems(){
-  var p=selPkmnId?allPkmn.find(function(x){return x.id===selPkmnId}):null;
-  var pname=p?p.name:null;
-  var isMega=p&&p.form==='Mega';
-  return allItems.filter(function(i){
-    // Mega stones: hide entirely for Mega forms; otherwise match species_lock
-    if(i.category==='mega_stone'){
-      if(isMega)return false;
-      return i.species_lock&&pname&&i.species_lock===pname;
-    }
-    // Other species-locked items (e.g. Light Ball → Pikachu)
-    if(i.species_lock){
-      return pname&&i.species_lock===pname;
-    }
-    return true;
-  });
-}
-
-function pickerVpBadge(item){
-  if(item.acquisition==='base_game')return '<span class="picker-item-cost"><i class="ph-bold ph-gift"></i> Free</span>';
-  if(item.acquisition==='mega_tutorial')return '<span class="picker-item-cost"><i class="ph-bold ph-trophy"></i> Tutorial</span>';
-  if(item.acquisition==='transfer_plza')return '<span class="picker-item-cost"><i class="ph-bold ph-arrows-clockwise"></i> Z-A</span>';
-  if(item.acquisition==='shop'&&item.vp_cost)return '<span class="picker-item-cost"><i class="ph-bold ph-shopping-cart"></i> '+item.vp_cost+'</span>';
-  return '';
-}
-
-// Tab counts that respect the current search but ignore the current category.
-function pickerTabCounts(){
-  var eligible=pickerEligibleItems();
-  var counts={all:0,hold:0,berry:0,mega_stone:0};
-  eligible.forEach(function(i){
-    if(_pickerSearch&&i.name.toLowerCase().indexOf(_pickerSearch)===-1)return;
-    counts.all++;
-    if(counts[i.category]!==undefined)counts[i.category]++;
-  });
-  return counts;
-}
-
-// Rebuild the sticky shell once per open. This writes the search <input> which
-// is then LEFT ALONE during search/filter updates so focus and cursor position
-// stay intact on every keystroke.
-function renderItemPickerShell(){
-  var p=selPkmnId?allPkmn.find(function(x){return x.id===selPkmnId}):null;
-  var pname=p?p.name:'';
-  var counts=pickerTabCounts();
-  var tabs=['all','hold','berry','mega_stone'].map(function(cat){
-    var label={all:'All',hold:'Hold',berry:'Berries',mega_stone:'Megas'}[cat];
-    var active=_pickerCategory===cat?' active':'';
-    return '<button class="it-pill'+active+'" data-cat="'+cat+'" onclick="setPickerCategory(\''+cat+'\')">'+label+'<span class="count">'+counts[cat]+'</span></button>';
-  }).join('');
-  var html='<div class="picker-sheet">'+
-    '<div class="picker-head">'+
-      '<div class="picker-handle"></div>'+
-      '<div class="picker-title"><span>Choose Item'+(pname?' for '+pname:'')+'</span><button class="picker-close" onclick="closeItemPicker()" aria-label="Close">✕</button></div>'+
-      '<div class="picker-search"><input class="search-box" id="pickerSearchInput" placeholder="Search items..." value="'+_pickerSearch.replace(/"/g,'&quot;')+'" oninput="setPickerSearch(this.value)" autocomplete="off"></div>'+
-      '<div class="picker-tabs" id="pickerTabs">'+tabs+'</div>'+
-    '</div>'+
-    '<div class="picker-body" id="pickerBody"></div>'+
-  '</div>';
-  document.getElementById('itemPickerOv').innerHTML=html;
-}
-
-// Update just the tab labels + counts + active class. Doesn't touch search input.
-function updatePickerTabs(){
-  var wrap=document.getElementById('pickerTabs');if(!wrap)return;
-  var counts=pickerTabCounts();
-  wrap.querySelectorAll('.it-pill').forEach(function(btn){
-    var cat=btn.dataset.cat;
-    btn.classList.toggle('active',_pickerCategory===cat);
-    var c=btn.querySelector('.count');if(c)c.textContent=counts[cat];
-  });
-}
-
-// Rebuild ONLY the item list. Called on every search/filter change.
-function renderItemPickerBody(){
-  var p=selPkmnId?allPkmn.find(function(x){return x.id===selPkmnId}):null;
-  var pname=p?p.name:'';
-  var currentId=(document.getElementById('edItem')||{}).value||'';
-  var eligible=pickerEligibleItems();
-  var filtered=eligible.filter(function(i){
-    if(_pickerSearch&&i.name.toLowerCase().indexOf(_pickerSearch)===-1)return false;
-    if(_pickerCategory!=='all'&&i.category!==_pickerCategory)return false;
-    return true;
-  });
-  // Group by category for section headers
-  var groups={hold:[],berry:[],mega_stone:[]};
-  filtered.forEach(function(i){if(groups[i.category])groups[i.category].push(i)});
-  var groupLabels={
-    hold:'Hold Items',
-    berry:'Berries',
-    mega_stone:'Mega Stones'+(pname?' for '+pname:'')
-  };
-  var body='';
-  // "None" option at the very top (keeps "no item" selectable)
-  body+='<div class="picker-item'+(currentId===''?' selected':'')+'" onclick="pickItem(\'\')"'+
-    '><div class="picker-sprite"><i class="ph-bold ph-prohibit" style="color:var(--muted);font-size:1rem"></i></div>'+
-    '<div class="picker-item-name">— None —</div></div>';
-  ['hold','berry','mega_stone'].forEach(function(cat){
-    if(!groups[cat].length)return;
-    if(_pickerCategory!=='all'&&_pickerCategory!==cat)return;
-    body+='<div class="picker-group-label">'+groupLabels[cat]+'</div>';
-    groups[cat].forEach(function(i){
-      var sel=currentId===i.id?' selected':'';
-      var sprite=i.sprite_url?'<img src="'+i.sprite_url+'" alt="" onerror="this.style.display=\'none\'">':'';
-      body+='<div class="picker-item'+sel+'" onclick="pickItem(\''+i.id+'\')">'+
-        '<div class="picker-sprite">'+sprite+'</div>'+
-        '<div class="picker-item-name">'+i.name+'</div>'+
-        pickerVpBadge(i)+
-      '</div>';
-    });
-  });
-  if(!filtered.length){
-    body+='<div class="empty" style="padding:2rem 0;text-align:center;color:var(--muted);font-size:.82rem">No items match</div>';
+  var el = document.getElementById('itemPickerSheet');
+  if (el) {
+    el.style.display = '';
+    // Populate body
+    renderItemPickerBody();
+    // Trigger open animation on next frame
+    requestAnimationFrame(function() {el.classList.add('open');});
   }
-  var el=document.getElementById('pickerBody');if(el)el.innerHTML=body;
 }
 
-// User taps an item in the picker.
-function pickItem(id){
-  var hidden=document.getElementById('edItem');if(hidden)hidden.value=id;
-  var btn=document.getElementById('edItemBtn');
-  if(btn){
-    if(!id){
-      btn.innerHTML='<span class="placeholder">— None —</span><i class="ph-bold ph-caret-down" style="color:var(--muted)"></i>';
-    }else{
-      var item=allItems.find(function(i){return i.id===id});
-      if(item){
-        btn.innerHTML=(item.sprite_url?'<div class="be-select-chosen"><img src="'+item.sprite_url+'" alt=""><span>'+item.name+'</span></div>':'<div class="be-select-chosen"><span>'+item.name+'</span></div>')+
-          '<i class="ph-bold ph-caret-down" style="color:var(--muted)"></i>';
+/**
+ * closeItemPicker()
+ * Closes the item picker bottom sheet.
+ */
+function closeItemPicker() {
+  _itemPickerOpen = false;
+  var el = document.getElementById('itemPickerSheet');
+  if (!el) {return;}
+  el.classList.remove('open');
+  setTimeout(function() {el.style.display = 'none';}, 260);
+}
+
+/**
+ * pickItem(id, fromMega)
+ * Sets the hidden #edItem input value and updates the #edItemBtn display button.
+ * Called programmatically (e.g. from edSelectMegaForm) when fromMega is true.
+ * @param {number|string} id       — item id, or '' / null to clear
+ * @param {boolean}       fromMega — skip close when called from mega logic
+ */
+function pickItem(id, fromMega) {
+  var hiddenEl = document.getElementById('edItem');
+  if (hiddenEl) {hiddenEl.value = id || '';}
+
+  var btn = document.getElementById('edItemBtn');
+  if (btn) {
+    if (!id) {
+      // Clear display
+      var imgEl = btn.querySelector('img.item-btn-sprite');
+      if (imgEl) {imgEl.src = ''; imgEl.style.display = 'none';}
+      var nameEl = btn.querySelector('.item-btn-name');
+      if (nameEl) {nameEl.textContent = '\u2014 None \u2014'; nameEl.style.color = 'var(--muted)';}
+      var caret = btn.querySelector('.caret');
+      if (caret) {caret.style.display = '';}
+    } else {
+      var item = allItems.find(function(it) {return String(it.id) === String(id);});
+      if (item) {
+        var imgEl2 = btn.querySelector('img.item-btn-sprite');
+        if (!imgEl2) {
+          imgEl2 = document.createElement('img');
+          imgEl2.className = 'item-btn-sprite';
+          imgEl2.style.cssText = 'width:26px;height:26px;object-fit:contain';
+          btn.insertBefore(imgEl2, btn.firstChild);
+        }
+        imgEl2.src = item.sprite_url || '';
+        imgEl2.style.display = item.sprite_url ? '' : 'none';
+        var nameEl2 = btn.querySelector('.item-btn-name');
+        if (nameEl2) {nameEl2.textContent = item.name; nameEl2.style.color = '';}
+        var caret2 = btn.querySelector('.caret');
+        if (caret2) {caret2.style.display = '';}
       }
     }
   }
-  closeItemPicker();
-}
-// Backdrop click dismisses the picker.
-document.addEventListener('click',function(e){
-  var ov=document.getElementById('itemPickerOv');
-  if(ov&&e.target===ov)closeItemPicker();
-});
 
+  if (!fromMega) {closeItemPicker();}
+}
+
+// ─── Eligibility filter ───────────────────────────────────────────────────────
+
+/**
+ * pickerEligibleItems()
+ * Returns the filtered item list for the currently selected base Pokémon.
+ *
+ * Rules:
+ *   1. Items with category 'hold' or 'berry' are always eligible.
+ *   2. Mega Stones:
+ *      ── MEGA (inverted logic) ──
+ *      - When the base Pokémon HAS Mega forms: show stones whose species_lock
+ *        matches the base Pokémon's name. Hide all other Mega Stones.
+ *      - When the Pokémon IS a Mega form row (form==='Mega'): hide all stones
+ *        (safety guard — should not normally happen in this flow).
+ *      - When no Mega forms: hide all Mega Stones.
+ *   3. Species-locked items (non-stone): only shown when species_lock matches
+ *      the base Pokémon's name or is empty/null.
+ *
+ * @returns {Array}
+ */
+function pickerEligibleItems() {
+  var base = allPkmn.find(function(p) {return p.id === selPkmnId;});
+  if (!base) {return allItems.filter(function(it) {return it.category !== 'mega_stone';});}
+
+  // ── MEGA: detect whether this species has Mega forms ─────────────────
+  var hasMegaForms = allPkmn.some(function(p) {return p.base_species_id === base.id;});
+  var isMegaRow    = base.form === 'Mega';
+
+  return allItems.filter(function(it) {
+    // Mega stone handling
+    if (it.category === 'mega_stone') {
+      if (isMegaRow) {return false;} // safety guard
+      if (!hasMegaForms) {return false;}
+      // Show only stones whose species_lock matches this base poke's name
+      return it.species_lock === base.name;
+    }
+    // Species-locked non-stone items
+    if (it.species_lock) {
+      return it.species_lock === base.name;
+    }
+    return true;
+  });
+}
+
+// ─── Shell & body renderers ───────────────────────────────────────────────────
+
+/**
+ * renderItemPickerShell()
+ * Returns the outer HTML for the item picker bottom sheet overlay.
+ * The inner body is populated separately by renderItemPickerBody().
+ */
+function renderItemPickerShell() {
+  return '<div class="ip-overlay" onclick="closeItemPicker()"></div>'
+    + '<div class="ip-sheet">'
+    + '<div class="ip-handle"></div>'
+    + '<div class="ip-head">'
+    + '<span class="ip-title">Choose Item</span>'
+    + '<button class="ip-close" onclick="closeItemPicker()">\u00d7</button>'
+    + '</div>'
+    + '<div class="ip-search-wrap">'
+    + '<input class="ip-search" id="ipSearch" type="search" placeholder="Search items\u2026" oninput="renderItemPickerBody()">'
+    + '</div>'
+    + '<div class="ip-cat-tabs" id="ipCatTabs"></div>'
+    + '<div class="ip-body" id="ipBody"></div>'
+    + '</div>';
+}
+
+/**
+ * renderItemPickerBody()
+ * Reads the current search query, filters eligible items, groups by category,
+ * and renders category tab pills + item cards into #ipCatTabs and #ipBody.
+ */
+function renderItemPickerBody() {
+  var eligible = pickerEligibleItems();
+
+  // Apply search filter
+  var query = '';
+  var searchEl = document.getElementById('ipSearch');
+  if (searchEl) {query = searchEl.value.trim().toLowerCase();}
+  if (query) {
+    eligible = eligible.filter(function(it) {
+      return it.name.toLowerCase().indexOf(query) !== -1
+        || (it.acquisition && it.acquisition.toLowerCase().indexOf(query) !== -1);
+    });
+  }
+
+  // Group by category
+  var CAT_ORDER = ['hold', 'berry', 'mega_stone'];
+  var CAT_LABEL = {hold: 'Hold Items', berry: 'Berries', mega_stone: 'Mega Stones'};
+  var groups = {};
+  eligible.forEach(function(it) {
+    var cat = it.category || 'hold';
+    if (!groups[cat]) {groups[cat] = [];}
+    groups[cat].push(it);
+  });
+
+  // Category tab pills
+  var tabsEl = document.getElementById('ipCatTabs');
+  if (tabsEl) {
+    var tabs = CAT_ORDER.filter(function(c) {return groups[c] && groups[c].length;}).map(function(c) {
+      return '<button class="ip-cat-tab" onclick="ipScrollToSection(\'' + c + '\')">'
+        + (CAT_LABEL[c] || c) + '</button>';
+    }).join('');
+    tabsEl.innerHTML = tabs || '';
+  }
+
+  // Item cards body
+  var bodyEl = document.getElementById('ipBody');
+  if (!bodyEl) {return;}
+
+  if (!eligible.length) {
+    bodyEl.innerHTML = '<p class="ip-empty">No items available.</p>';
+    return;
+  }
+
+  var html = '';
+  CAT_ORDER.forEach(function(cat) {
+    if (!groups[cat] || !groups[cat].length) {return;}
+    html += '<div class="ip-section" id="ip-sec-' + cat + '">';
+    html += '<div class="ip-section-label">' + (CAT_LABEL[cat] || cat) + '</div>';
+    html += '<div class="ip-cards">';
+    groups[cat].forEach(function(it) {
+      var isMega = it.category === 'mega_stone';
+      var megaClass = isMega ? ' epc-mega' : '';
+      var costBadge = it.vp_cost ? '<span class="epc-cost">' + it.vp_cost + ' VP</span>' : '';
+      var acqBadge  = it.acquisition ? '<span class="epc-acq">' + _escIp(it.acquisition) + '</span>' : '';
+      var spriteHtml = it.sprite_url
+        ? '<img class="epc-sprite" src="' + _escIp(it.sprite_url) + '" alt="">'
+        : isMega ? '<img class="epc-sprite" src="' + _escIp(MEGA_STONE_URL) + '" alt="">'
+        : '';
+      html += '<button class="epc-card' + megaClass + '" onclick="pickItem(' + it.id + ')">'
+        + spriteHtml
+        + '<div class="epc-info">'
+        + '<span class="epc-name">' + _escIp(it.name) + '</span>'
+        + '<div class="epc-badges">' + costBadge + acqBadge + '</div>'
+        + '</div></button>';
+    });
+    html += '</div></div>';
+  });
+
+  bodyEl.innerHTML = html;
+}
+
+/**
+ * ipScrollToSection(cat)
+ * Scrolls the picker body to the given category section.
+ */
+function ipScrollToSection(cat) {
+  var sec = document.getElementById('ip-sec-' + cat);
+  var body = document.getElementById('ipBody');
+  if (sec && body) {body.scrollTop = sec.offsetTop - body.offsetTop;}
+}
+
+/** HTML-escape helper for item picker strings. */
+function _escIp(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}

@@ -1,174 +1,539 @@
-// PURE STAT CALC HELPERS (shared by dex detail + build editor)
-// ═══════════════════════════════════════
-function bsCalcStatFor(key,base,spVal,nature){
-  var m=1;
-  if(nature){
-    if(BSNATMAP[nature.increased_stat]===key)m=1.1;
-    if(BSNATMAP[nature.decreased_stat]===key)m=0.9;
+/* stats-modified.js — Full replacement of app/builds/stats.js
+ * Mega Evolution additions are marked with ── MEGA ──
+ * All original functions are preserved intact.
+ * Globals assumed in scope: selPkmnId, spV, edView, edMegaFormId, edMegaPreview,
+ *   allPkmn, allItems, allNatures, BSK, BSDB, BSN, BSC, SP_MAX, MEGA_STONE_URL,
+ *   NAT_SC, TC, getMegaForms, getMegaStoneForForm, edUpdateMegaOverlay,
+ *   edUpdateMegaHex, edClearMegaHex, edClearMegaOverlay
+ */
+
+'use strict';
+
+// ─── Stat formula ─────────────────────────────────────────────────────────────
+
+/**
+ * bsCalcStatFor(key, base, spVal, nature)
+ * Standard Lv50 competitive stat formula.
+ * HP uses a different formula than other stats.
+ * @param {string} key    — one of BSK
+ * @param {number} base   — base stat value
+ * @param {number} spVal  — SP allocation for this stat (0–SP_MAX)
+ * @param {Object|null} nature — nature object or null
+ * @returns {number}
+ */
+function bsCalcStatFor(key, base, spVal, nature) {
+  var iv = 31;
+  var ev = 0;
+  var lvl = 50;
+  var nat = (nature && NAT_SC) ? (NAT_SC[nature.name] && NAT_SC[nature.name][key]) || 1 : 1;
+  var sp = Number(spVal) || 0;
+  if (key === 'hp') {
+    return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * lvl / 100) + lvl + 10) + sp;
   }
-  if(key==='hp')return Math.floor((2*base+31)*50/100)+60+spVal;
-  return Math.floor((Math.floor((2*base+31)*50/100)+5)*m)+spVal;
+  return Math.floor((Math.floor(((2 * base + iv + Math.floor(ev / 4)) * lvl / 100) + 5) * nat)) + sp;
 }
-function bsGetCalcStatsFor(poke,sp,nature){
-  if(!poke)return BSK.map(function(k){return{key:k,base:0,sp:0,calc:0,natMod:1}});
-  return BSK.map(function(k){
-    var base=poke[BSDB[k]]||0,spVal=sp[k]||0,m=1;
-    if(nature){
-      if(BSNATMAP[nature.increased_stat]===k)m=1.1;
-      if(BSNATMAP[nature.decreased_stat]===k)m=0.9;
+
+/**
+ * bsGetCalcStatsFor(poke, sp, nature)
+ * Returns an array of {key, base, sp, calc, natMod} for all six stats.
+ * @param {Object} poke    — pokemon row
+ * @param {Object} sp      — SP allocation object e.g. {hp:0, atk:32, ...}
+ * @param {Object|null} nature
+ * @returns {Array}
+ */
+function bsGetCalcStatsFor(poke, sp, nature) {
+  return BSK.map(function(k) {
+    var base = poke[BSDB[k]] || 0;
+    var spVal = (sp && sp[k]) ? sp[k] : 0;
+    var calc = bsCalcStatFor(k, base, spVal, nature);
+    var natMod = (nature && NAT_SC && NAT_SC[nature.name]) ? NAT_SC[nature.name][k] || 1 : 1;
+    return {key: k, base: base, sp: spVal, calc: calc, natMod: natMod};
+  });
+}
+
+// ─── Pokémon / nature getters ─────────────────────────────────────────────────
+
+/**
+ * edGetPoke()
+ * Returns the currently selected base Pokémon object, or undefined.
+ */
+function edGetPoke() {
+  return allPkmn.find(function(x) {return x.id === selPkmnId;});
+}
+
+/**
+ * edGetNature()
+ * Reads #edNat select value and returns the matching nature object, or null.
+ */
+function edGetNature() {
+  var el = document.getElementById('edNat');
+  if (!el || !el.value) {return null;}
+  return allNatures.find(function(n) {return String(n.id) === String(el.value);}) || null;
+}
+
+// ─── Bar view ─────────────────────────────────────────────────────────────────
+
+/**
+ * edBuildBars()
+ * Returns the full HTML string for the stat-bars grid.
+ * Includes Mega overlay elements (.bs-mega-fill, .bs-base-marker) per row. ── MEGA ──
+ */
+function edBuildBars() {
+  var poke = edGetPoke();
+  if (!poke) {return '';}
+  var nature = edGetNature();
+  var stats = bsGetCalcStatsFor(poke, spV, nature);
+
+  var rows = stats.map(function(s) {
+    var SCALE = 300;
+    var pct = Math.min(100, Math.round(s.calc / SCALE * 100));
+    var color = BSC[s.key] || '#fff';
+    var natInd = s.natMod > 1 ? '<span class="bs-nat" id="ed-bi-' + s.key + '" style="color:var(--green)">\u25b2</span>'
+               : s.natMod < 1 ? '<span class="bs-nat" id="ed-bi-' + s.key + '" style="color:var(--red)">\u25bc</span>'
+               : '<span class="bs-nat" id="ed-bi-' + s.key + '"></span>';
+
+    // ── MEGA: overlay elements (initially hidden) ──────────────────────────
+    var megaOverlay = '<div class="bs-mega-fill" id="ed-mo-' + s.key + '" style="width:0;left:0;display:none"></div>'
+      + '<div class="bs-base-marker" id="ed-mm-' + s.key + '" style="left:-999px;display:none"></div>';
+
+    return '<div class="bs-row">'
+      + '<span class="bs-label">' + (BSN[s.key] || s.key) + '</span>'
+      + '<div class="bs-track-wrap">'
+      + '<div class="bs-base-track">'
+      + '<div class="bs-base-fill" id="ed-bf-' + s.key + '" style="width:' + pct + '%;background:' + color + '"></div>'
+      + megaOverlay
+      + '</div></div>'
+      + '<span class="bs-val" id="ed-bv-' + s.key + '" style="color:' + color + '">' + s.calc + '</span>'
+      + natInd
+      + '</div>';
+  });
+
+  return '<div class="bs-grid">' + rows.join('') + '</div>';
+}
+
+/**
+ * edUpdateBars(stats)
+ * Updates bar fill widths, value labels, and nature indicators in the DOM.
+ * Does NOT touch the Mega overlay elements.
+ * @param {Array} stats — from bsGetCalcStatsFor
+ */
+function edUpdateBars(stats) {
+  var SCALE = 300;
+  stats.forEach(function(s) {
+    var pct = Math.min(100, Math.round(s.calc / SCALE * 100));
+    var fillEl = document.getElementById('ed-bf-' + s.key);
+    var valEl  = document.getElementById('ed-bv-' + s.key);
+    var natEl  = document.getElementById('ed-bi-' + s.key);
+    if (fillEl) {fillEl.style.width = pct + '%';}
+    if (valEl && !valEl.style.color.includes('var(--mega)')) {
+      // don't overwrite mega gold coloring; edRefresh owns that
+      valEl.textContent = s.calc;
+    } else if (valEl) {
+      valEl.textContent = s.calc;
     }
-    return{key:k,base:base,sp:spVal,calc:bsCalcStatFor(k,base,spVal,nature),natMod:m};
+    if (natEl) {
+      natEl.textContent = s.natMod > 1 ? '\u25b2' : s.natMod < 1 ? '\u25bc' : '';
+      natEl.style.color = s.natMod > 1 ? 'var(--green)' : s.natMod < 1 ? 'var(--red)' : '';
+    }
   });
 }
 
-// ═══════════════════════════════════════
-// BUILD EDITOR STAT PREVIEW (bars + hex + SP sliders)
-// DOM IDs prefixed ed-* to avoid clash with dex detail panel
-// ═══════════════════════════════════════
-var edView='bars';
+// ─── Hex chart view ───────────────────────────────────────────────────────────
 
-function edGetPoke(){return allPkmn.find(function(x){return x.id===selPkmnId})}
-function edGetNature(){
-  var sel=document.getElementById('edNat');
-  if(!sel||!sel.value)return null;
-  var n=allNatures.find(function(x){return x.id===sel.value});
-  return n&&n.increased_stat?n:null;
-}
-
-function edBuildBars(){
-  return '<div class="bs-grid">'+BSK.map(function(k){
-    return '<div class="bs-row"><span class="bs-label">'+BSN[k]+'</span><div class="bs-track"><div class="bs-fill" id="ed-bf-'+k+'" style="background:'+BSC[k]+'"></div></div><span class="bs-val" style="color:'+BSC[k]+'" id="ed-bv-'+k+'">0</span><span class="bs-nat-ind" id="ed-bi-'+k+'"></span></div>';
-  }).join('')+'</div>';
-}
-function edUpdateBars(stats){
-  stats.forEach(function(st){
-    var f=document.getElementById('ed-bf-'+st.key),v=document.getElementById('ed-bv-'+st.key),i=document.getElementById('ed-bi-'+st.key);
-    if(f)f.style.width=Math.min(st.calc/300*100,100)+'%';
-    if(v)v.textContent=st.calc;
-    if(i)i.innerHTML=st.natMod>1?'<span style="color:var(--green)">▲</span>':st.natMod<1?'<span style="color:var(--red)">▼</span>':'';
-  });
-}
-
-function edBuildHex(poke){
-  var typeCol=(TC[poke.type_1]||TC.Normal).m;
-  var cx=180,cy=175,r=78,angles=[-90,-30,30,90,150,210],order=[0,1,2,5,4,3];
-  function polar(a,rd){var d=a*Math.PI/180;return{x:cx+rd*Math.cos(d),y:cy+rd*Math.sin(d)}}
-  var outerPts=angles.map(function(a){var p=polar(a,r);return p.x+','+p.y}).join(' ');
-  var g75=angles.map(function(a){var p=polar(a,r*.75);return p.x+','+p.y}).join(' ');
-  var g50=angles.map(function(a){var p=polar(a,r*.5);return p.x+','+p.y}).join(' ');
-  var g25=angles.map(function(a){var p=polar(a,r*.25);return p.x+','+p.y}).join(' ');
-  var spokes=angles.map(function(a){var p=polar(a,r);return'<line x1="'+cx+'" y1="'+cy+'" x2="'+p.x+'" y2="'+p.y+'" stroke="var(--border)" stroke-width="1"/>'}).join('');
-  var labels='';
-  for(var i=0;i<6;i++){
-    var si=order[i],k=BSK[si],pt=polar(angles[i],r+26);
-    var anchor='middle';if(angles[i]===-30||angles[i]===30)anchor='start';if(angles[i]===150||angles[i]===210)anchor='end';
-    var isTop=angles[i]===-90,isBot=angles[i]===90;
-    if(isTop){labels+='<text x="'+pt.x+'" y="'+(pt.y-10)+'" text-anchor="middle" fill="'+BSC[k]+'" font-size="11" font-weight="700" font-family="Plus Jakarta Sans,sans-serif">'+BSN[k]+'</text><text x="'+pt.x+'" y="'+(pt.y+5)+'" text-anchor="middle" id="ed-hv-'+k+'" fill="'+BSC[k]+'" font-size="14" font-weight="800" font-family="Plus Jakarta Sans,sans-serif" style="font-variant-numeric:tabular-nums">0</text>'}
-    else if(isBot){labels+='<text x="'+pt.x+'" y="'+(pt.y+4)+'" text-anchor="middle" id="ed-hv-'+k+'" fill="'+BSC[k]+'" font-size="14" font-weight="800" font-family="Plus Jakarta Sans,sans-serif" style="font-variant-numeric:tabular-nums">0</text><text x="'+pt.x+'" y="'+(pt.y+18)+'" text-anchor="middle" fill="'+BSC[k]+'" font-size="11" font-weight="700" font-family="Plus Jakarta Sans,sans-serif">'+BSN[k]+'</text>'}
-    else{labels+='<text x="'+pt.x+'" y="'+(pt.y-4)+'" text-anchor="'+anchor+'" fill="'+BSC[k]+'" font-size="11" font-weight="700" font-family="Plus Jakarta Sans,sans-serif">'+BSN[k]+'</text><text x="'+pt.x+'" y="'+(pt.y+12)+'" text-anchor="'+anchor+'" id="ed-hv-'+k+'" fill="'+BSC[k]+'" font-size="14" font-weight="800" font-family="Plus Jakarta Sans,sans-serif" style="font-variant-numeric:tabular-nums">0</text>'}
-  }
-  return '<div class="bs-hex-wrap"><svg class="bs-hex-svg" viewBox="0 0 360 360"><polygon points="'+outerPts+'" fill="none" stroke="var(--border)" stroke-width="1.5"/><polygon points="'+g75+'" fill="none" stroke="var(--border)" stroke-width=".5" opacity=".35"/><polygon points="'+g50+'" fill="none" stroke="var(--border)" stroke-width=".5" opacity=".35"/><polygon points="'+g25+'" fill="none" stroke="var(--border)" stroke-width=".5" opacity=".35"/>'+spokes+'<polygon id="ed-hexPoly" points="'+cx+','+cy+'" fill="'+typeCol+'25" stroke="'+typeCol+'" stroke-width="2.5" stroke-linejoin="round" style="transition:all .3s ease"/>'+labels+'</svg></div>';
-}
-function edUpdateHex(stats){
-  var cx=180,cy=175,r=78,angles=[-90,-30,30,90,150,210],order=[0,1,2,5,4,3];
-  function polar(a,rd){var d=a*Math.PI/180;return{x:cx+rd*Math.cos(d),y:cy+rd*Math.sin(d)}}
-  var pts=[];for(var i=0;i<6;i++){var si=order[i];var pct=Math.min(stats[si].calc/300,1);var pt=polar(angles[i],r*Math.max(pct,0.05));pts.push(pt.x+','+pt.y)}
-  var poly=document.getElementById('ed-hexPoly');if(poly)poly.setAttribute('points',pts.join(' '));
-  for(var i=0;i<6;i++){var si=order[i],st=stats[si],el=document.getElementById('ed-hv-'+st.key);if(el){el.textContent=st.calc+(st.natMod>1?' ▲':st.natMod<1?' ▼':'');el.style.fill=st.natMod>1?'var(--green)':st.natMod<1?'var(--red)':BSC[st.key]}}
-}
-
-function edBuildSP(){
-  var rows=BSK.map(function(k){
-    var col=BSC[k];
-    return '<div class="dsp-row">'+
-      '<span class="dsp-name" style="color:'+col+'">'+BSN[k]+'</span>'+
-      '<button class="dsp-pm" onpointerdown="edAdj(\''+k+'\',-1)">−</button>'+
-      '<div class="dsp-slider-wrap">'+
-        '<div class="dsp-slider-track"><div class="dsp-slider-fill" id="ed-sf-'+k+'" style="background:'+col+'"></div></div>'+
-        '<input type="range" class="dsp-slider" id="ed-sr-'+k+'" min="0" max="32" value="'+spV[k]+'" style="--thumb-col:'+col+'" oninput="edSlide(\''+k+'\',this.value)">'+
-      '</div>'+
-      '<button class="dsp-pm" onpointerdown="edAdj(\''+k+'\',1)">+</button>'+
-      '<input class="dsp-val-box" id="ed-sv-'+k+'" type="number" min="0" max="32" value="'+spV[k]+'" style="color:'+col+'" onchange="edSet(\''+k+'\',this.value)">'+
-    '</div>';
+/**
+ * edBuildHex(poke)
+ * Returns the SVG HTML string for the hex radar chart.
+ * Includes a second polygon for the Mega overlay. ── MEGA ──
+ * @param {Object} poke — pokemon row
+ */
+function edBuildHex(poke) {
+  var cx = 180, cy = 175, r = 90, MAX = 300;
+  // Hex grid lines
+  var gridLines = [0.33, 0.66, 1].map(function(frac) {
+    var pts = BSK.map(function(_, i) {
+      var angle = (Math.PI / 3) * i - Math.PI / 2;
+      return (cx + r * frac * Math.cos(angle)).toFixed(1) + ',' + (cy + r * frac * Math.sin(angle)).toFixed(1);
+    }).join(' ');
+    return '<polygon points="' + pts + '" fill="none" stroke="var(--border)" stroke-width="1"/>';
   }).join('');
-  return '<div class="dsp-section"><div class="dsp-header"><span class="dsp-title">SP Allocation</span><div class="dsp-remain-wrap"><div class="dsp-remain-num ok" id="ed-remainNum">'+SP_MAX+'</div><div class="dsp-remain-label">remaining of '+SP_MAX+'</div></div></div><div class="dsp-grid">'+rows+'</div></div>';
-}
-function edUpdateSP(){
-  var total=BSK.reduce(function(s,k){return s+spV[k]},0),remain=SP_MAX-total;
-  var el=document.getElementById('ed-remainNum');if(el){el.textContent=remain;el.className='dsp-remain-num '+(remain<0?'over':remain<=5?'warn':'ok')}
-  BSK.forEach(function(k){
-    var fill=document.getElementById('ed-sf-'+k),val=document.getElementById('ed-sv-'+k),range=document.getElementById('ed-sr-'+k);
-    if(fill)fill.style.width=(spV[k]/32*100)+'%';
-    if(range)range.value=spV[k];
-    if(val&&document.activeElement!==val)val.value=spV[k];
-  });
-}
-function edUpdateBST(stats){
-  var total=stats.reduce(function(s,st){return s+st.calc},0);
-  var cls=total>=600?'bst-elite':total>=500?'bst-high':total>=400?'bst-mid':'bst-low';
-  var el=document.getElementById('ed-bstVal');if(el){el.textContent=total;el.className='bs-total-val '+cls}
+
+  // Axis lines
+  var axisLines = BSK.map(function(_, i) {
+    var angle = (Math.PI / 3) * i - Math.PI / 2;
+    var x = (cx + r * Math.cos(angle)).toFixed(1);
+    var y = (cy + r * Math.sin(angle)).toFixed(1);
+    return '<line x1="' + cx + '" y1="' + cy + '" x2="' + x + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>';
+  }).join('');
+
+  // Stat labels
+  var labels = BSK.map(function(k, i) {
+    var angle = (Math.PI / 3) * i - Math.PI / 2;
+    var dist = r + 14;
+    var x = (cx + dist * Math.cos(angle)).toFixed(1);
+    var y = (cy + dist * Math.sin(angle)).toFixed(1);
+    return '<text x="' + x + '" y="' + y + '" text-anchor="middle" dominant-baseline="middle" fill="var(--muted)" font-size="9" font-family="inherit" font-weight="700">' + (BSN[k] || k) + '</text>';
+  }).join('');
+
+  // Base polygon points (will be updated by edUpdateHex)
+  var nature = edGetNature();
+  var stats = bsGetCalcStatsFor(poke, spV, nature);
+  var basePoints = stats.map(function(s, i) {
+    var angle = (Math.PI / 3) * i - Math.PI / 2;
+    var ratio = Math.min(1, s.calc / MAX);
+    return (cx + r * ratio * Math.cos(angle)).toFixed(1) + ',' + (cy + r * ratio * Math.sin(angle)).toFixed(1);
+  }).join(' ');
+
+  // Type color for base polygon
+  var typeColor = poke.type1 && TC ? (TC[poke.type1] || '#a78bfa') : '#a78bfa';
+
+  return '<svg viewBox="0 0 360 350" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">'
+    + gridLines + axisLines + labels
+    // ── MEGA: Mega polygon (initially hidden) ──
+    + '<polygon id="ed-hexMegaPoly" fill="rgba(245,158,11,0.25)" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round" points="' + cx + ',' + cy + '" style="transition:all .3s ease;display:none"/>'
+    // Base polygon
+    + '<polygon id="ed-hexPoly" fill="' + typeColor + '" fill-opacity="0.35" stroke="' + typeColor + '" stroke-width="2" stroke-linejoin="round" points="' + basePoints + '" style="transition:all .3s ease"/>'
+    + '</svg>';
 }
 
-function edRefresh(){
-  var p=edGetPoke();
-  if(!p)return;
-  var nature=edGetNature();
-  var stats=bsGetCalcStatsFor(p,spV,nature);
-  edUpdateBars(stats);
-  edUpdateHex(stats);
-  edUpdateBST(stats);
+/**
+ * edUpdateHex(stats)
+ * Updates the base polygon (#ed-hexPoly) points.
+ * @param {Array} stats — from bsGetCalcStatsFor
+ */
+function edUpdateHex(stats) {
+  var poly = document.getElementById('ed-hexPoly');
+  if (!poly) {return;}
+  var cx = 180, cy = 175, r = 90, MAX = 300;
+  var pts = stats.map(function(s, i) {
+    var angle = (Math.PI / 3) * i - Math.PI / 2;
+    var ratio = Math.min(1, s.calc / MAX);
+    return (cx + r * ratio * Math.cos(angle)).toFixed(1) + ',' + (cy + r * ratio * Math.sin(angle)).toFixed(1);
+  }).join(' ');
+  poly.setAttribute('points', pts);
+}
+
+// ─── SP sliders ───────────────────────────────────────────────────────────────
+
+/**
+ * edBuildSP()
+ * Returns the HTML for all SP slider rows.
+ */
+function edBuildSP() {
+  var used = BSK.reduce(function(a, k) {return a + (spV[k] || 0);}, 0);
+  var remain = SP_MAX - used;
+
+  var rows = BSK.filter(function(k) {return (spV[k] || 0) > 0;}).map(function(k) {
+    var val = spV[k] || 0;
+    var pct = Math.round(val / SP_MAX * 100);
+    var color = BSC[k] || '#fff';
+    return '<div class="dsp-row">'
+      + '<span class="dsp-name" style="color:' + color + '">' + (BSN[k] || k) + '</span>'
+      + '<button class="dsp-pm" onclick="edAdj(\'' + k + '\',-1)">\u2212</button>'
+      + '<div class="dsp-track"><div class="dsp-fill" id="dsp-f-' + k + '" style="width:' + pct + '%;background:' + color + '"></div></div>'
+      + '<button class="dsp-pm" onclick="edAdj(\'' + k + '\',1)">+</button>'
+      + '<input class="dsp-val" id="dsp-v-' + k + '" style="color:' + color + '" value="' + val + '" onchange="edSet(\'' + k + '\',this.value)" oninput="edSlide(\'' + k + '\',this.value)">'
+      + '</div>';
+  });
+
+  // Non-zero stats rows built above; also show zeros if not yet allocated
+  var zeroRows = BSK.filter(function(k) {return !(spV[k] > 0);}).map(function(k) {
+    var color = BSC[k] || '#fff';
+    return '<div class="dsp-row">'
+      + '<span class="dsp-name" style="color:' + color + '">' + (BSN[k] || k) + '</span>'
+      + '<button class="dsp-pm" onclick="edAdj(\'' + k + '\',-1)">\u2212</button>'
+      + '<div class="dsp-track"><div class="dsp-fill" id="dsp-f-' + k + '" style="width:0%;background:' + color + '"></div></div>'
+      + '<button class="dsp-pm" onclick="edAdj(\'' + k + '\',1)">+</button>'
+      + '<input class="dsp-val" id="dsp-v-' + k + '" style="color:' + color + '" value="0" onchange="edSet(\'' + k + '\',this.value)" oninput="edSlide(\'' + k + '\',this.value)">'
+      + '</div>';
+  });
+
+  // ── MEGA: annotate SP title when in Mega preview mode ─────────────────
+  var megaNote = (edMegaFormId && edMegaPreview === 'mega')
+    ? ' <span style="color:var(--muted);font-size:.6rem;font-weight:500"> \xb7 base form</span>'
+    : '';
+
+  return '<div class="dsp-section">'
+    + '<div class="dsp-hd">'
+    + '<span class="dsp-title">SP Allocation' + megaNote + '</span>'
+    + '<div style="display:flex;align-items:center"><span class="dsp-remain" id="dsp-remain">' + remain + '</span><span class="dsp-remain-label">of ' + SP_MAX + '</span></div>'
+    + '</div>'
+    + rows.concat(zeroRows).join('')
+    + '</div>';
+}
+
+/**
+ * edUpdateSP()
+ * Updates SP slider fills, value inputs, and remaining counter without full rebuild.
+ */
+function edUpdateSP() {
+  var used = BSK.reduce(function(a, k) {return a + (spV[k] || 0);}, 0);
+  var remain = SP_MAX - used;
+  var remEl = document.getElementById('dsp-remain');
+  if (remEl) {remEl.textContent = remain;}
+
+  BSK.forEach(function(k) {
+    var val = spV[k] || 0;
+    var pct = Math.round(val / SP_MAX * 100);
+    var fEl = document.getElementById('dsp-f-' + k);
+    var vEl = document.getElementById('dsp-v-' + k);
+    if (fEl) {fEl.style.width = pct + '%';}
+    if (vEl) {vEl.value = val;}
+  });
+}
+
+// ─── SP control handlers ──────────────────────────────────────────────────────
+
+/**
+ * edSet(key, val)
+ * Sets SP for a stat from a text input change event.
+ */
+function edSet(key, val) {
+  val = parseInt(val, 10);
+  if (isNaN(val)) {val = 0;}
+  val = Math.max(0, Math.min(val, SP_MAX));
+  spV[key] = val;
+  edRefresh();
+}
+
+/**
+ * edSlide(key, val)
+ * Called on input event from SP text input (live slide).
+ */
+function edSlide(key, val) {
+  edSet(key, val);
+}
+
+/**
+ * edAdj(key, delta)
+ * Increments or decrements a stat's SP by delta (±1).
+ */
+function edAdj(key, delta) {
+  var cur = spV[key] || 0;
+  var used = BSK.reduce(function(a, k) {return a + (spV[k] || 0);}, 0);
+  var newVal = cur + delta;
+  if (newVal < 0) {return;}
+  if (delta > 0 && used >= SP_MAX) {return;}
+  spV[key] = newVal;
+  edRefresh();
+}
+
+// ─── Section builders ─────────────────────────────────────────────────────────
+
+/**
+ * edBuildStatSection()
+ * Returns the full stat section HTML:
+ *   [preview toggle if Mega on] + poke header + view toggle + bars|hex + BST + SP
+ * ── MEGA: preview bar injected at top when edMegaFormId is set ──
+ */
+function edBuildStatSection() {
+  var poke = edGetPoke();
+  if (!poke) {return '';}
+  var nature = edGetNature();
+
+  // ── MEGA: determine which poke to display in header ───────────────────
+  var displayPoke = poke;
+  var isMegaPreview = !!(edMegaFormId && edMegaPreview === 'mega');
+  if (isMegaPreview) {
+    var mf = allPkmn.find(function(p) {return p.id === edMegaFormId;});
+    if (mf) {displayPoke = mf;}
+  }
+
+  // ── MEGA: preview toggle bar ──────────────────────────────────────────
+  var previewBarHtml = '';
+  if (edMegaFormId) {
+    var megaForm = allPkmn.find(function(p) {return p.id === edMegaFormId;});
+    var megaLabel = megaForm ? megaForm.name.replace(poke.name, '').trim() : 'Mega';
+    if (!megaLabel) {megaLabel = 'Mega';}
+    var stone = megaForm ? getMegaStoneForForm(megaForm, poke.name) : null;
+    var stoneImg = stone && stone.sprite_url
+      ? '<img src="' + _escSt(stone.sprite_url) + '" onerror="this.style.display=\'none\'" alt="">'
+      : '<img src="' + _escSt(MEGA_STONE_URL) + '" onerror="this.style.display=\'none\'" alt="">';
+    var baseActive = edMegaPreview === 'base' ? ' active' : '';
+    var megaActive = edMegaPreview === 'mega' ? ' active mega-active' : '';
+    previewBarHtml = '<div class="preview-bar" id="edPreviewBar">'
+      + '<span class="preview-label">Preview</span>'
+      + '<div class="preview-btns">'
+      + '<button class="preview-btn' + baseActive + '" data-preview="base" onclick="edSwitchPreview(\'base\')">\u2694 Base</button>'
+      + '<button class="preview-btn' + megaActive + '" data-preview="mega" onclick="edSwitchPreview(\'mega\')">'
+      + stoneImg + ' ' + megaLabel + '</button>'
+      + '</div></div>';
+  }
+
+  // ── Header: sprite + name + ability ──────────────────────────────────
+  var sprite = displayPoke.sprite_url || '';
+  var abilityHtml;
+  if (isMegaPreview && displayPoke.ability1) {
+    abilityHtml = 'Ability: <span class="mega-ability-text">' + _escSt(displayPoke.ability1) + '</span>';
+  } else {
+    var abilityName = poke.ability1 || '';
+    abilityHtml = 'Ability: <strong style="color:var(--text)">' + _escSt(abilityName) + '</strong>';
+  }
+
+  var nameBadge = isMegaPreview
+    ? ' <span class="mega-badge"><img src="' + _escSt(MEGA_STONE_URL) + '" onerror="this.style.display=\'none\'" alt=""> MEGA</span>'
+    : '';
+
+  var pokeHead = '<div class="stat-poke-head">'
+    + '<img class="stat-poke-sprite" src="' + _escSt(sprite) + '" alt="">'
+    + '<div>'
+    + '<div class="stat-poke-name">' + _escSt(displayPoke.name) + nameBadge + '</div>'
+    + '<div class="stat-poke-ability">' + abilityHtml + '</div>'
+    + '</div></div>';
+
+  // View toggle
+  var viewTog = '<div class="view-tog">'
+    + '<button class="view-btn' + (edView === 'bars' ? ' active' : '') + '" onclick="edSwitchView(\'bars\')">Bars</button>'
+    + '<button class="view-btn' + (edView === 'hex' ? ' active' : '') + '" onclick="edSwitchView(\'hex\')">Hex</button>'
+    + '</div>';
+
+  // Stat content (bars or hex)
+  var statContent = edView === 'hex' ? edBuildHex(displayPoke) : edBuildBars();
+
+  // BST
+  var stats = bsGetCalcStatsFor(displayPoke, spV, nature);
+  var bst = stats.reduce(function(a, s) {return a + s.calc;}, 0);
+  var bstClass = bst >= 900 ? 'bst-elite' : bst >= 700 ? 'bst-high' : '';
+  var bstNote = isMegaPreview ? ' <span class="bst-mega-note">\u2726 Mega</span>' : '';
+  var bstHtml = '<div class="bs-total">'
+    + '<span class="bs-total-label">Lv50 Stat Total' + bstNote + '</span>'
+    + '<span class="bst-val ' + bstClass + '" id="ed-bst">' + bst + '</span>'
+    + '</div>';
+
+  return '<div class="stat-section">'
+    + previewBarHtml
+    + '<div class="stat-inner">'
+    + pokeHead + viewTog + statContent + bstHtml + edBuildSP()
+    + '</div></div>';
+}
+
+// ─── View switcher ────────────────────────────────────────────────────────────
+
+/**
+ * edSwitchView(view)
+ * Switches between 'bars' and 'hex' stat views.
+ * @param {'bars'|'hex'} view
+ */
+function edSwitchView(view) {
+  edView = view;
+  // Update toggle button active state
+  document.querySelectorAll('.view-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent.toLowerCase().indexOf(view) !== -1);
+  });
+  // Swap content
+  var inner = document.querySelector('.stat-section .stat-inner');
+  if (!inner) {return;}
+  // Re-render just the chart area (between view-tog and bs-total)
+  // Simplest: full section re-render via edRefresh
+  edRefresh();
+}
+
+// ─── BST update ───────────────────────────────────────────────────────────────
+
+function _edUpdateBST(stats) {
+  var bst = stats.reduce(function(a, s) {return a + s.calc;}, 0);
+  var el = document.getElementById('ed-bst');
+  if (!el) {return;}
+  el.textContent = bst;
+  el.className = 'bst-val' + (bst >= 900 ? ' bst-elite' : bst >= 700 ? ' bst-high' : '');
+}
+
+// ─── Main refresh ─────────────────────────────────────────────────────────────
+
+/**
+ * edRefresh()
+ * Central update function — reads current state and pushes changes to the DOM.
+ * ── MEGA: Handles mega preview mode, overlay bars, and overlay hex. ──
+ */
+function edRefresh() {
+  var poke = edGetPoke();
+  if (!poke) {return;}
+  var nature = edGetNature();
+
+  // ── MEGA: Determine which Pokémon to use for stat display ─────────────
+  var isMegaPreview = !!(edMegaFormId && edMegaPreview === 'mega');
+  var displayPoke = poke;
+  if (isMegaPreview) {
+    var mf = allPkmn.find(function(p) {return p.id === edMegaFormId;});
+    if (mf) {displayPoke = mf;}
+  }
+
+  var displayStats = bsGetCalcStatsFor(displayPoke, spV, nature);
+  var baseStats    = bsGetCalcStatsFor(poke, spV, nature);
+
+  // ── Nature picker sync ───────────────────────────────────────────────
+  // (nature picker widget may call its own refresh — no action needed here
+  //  beyond ensuring the select value is honoured via edGetNature above)
+
+  // ── Update stat bars ─────────────────────────────────────────────────
+  if (edView === 'bars') {
+    edUpdateBars(displayStats);
+    if (isMegaPreview) {
+      edUpdateMegaOverlay(baseStats, displayStats);
+    } else {
+      edClearMegaOverlay();
+    }
+  }
+
+  // ── Update hex ───────────────────────────────────────────────────────
+  if (edView === 'hex') {
+    edUpdateHex(displayStats);
+    if (isMegaPreview) {
+      edUpdateMegaHex(baseStats, displayStats);
+    } else {
+      edClearMegaHex();
+    }
+  }
+
+  // ── BST ──────────────────────────────────────────────────────────────
+  _edUpdateBST(displayStats);
+
+  // ── SP sliders ───────────────────────────────────────────────────────
   edUpdateSP();
-  // Drop H: sync nature picker button label + chips
-  var _natBtn=document.getElementById('edNatBtn');
-  if(_natBtn){
-    var _natLbl=document.getElementById('edNatLabel');
-    var _natChips=document.getElementById('edNatChips');
-    if(_natLbl)_natLbl.textContent=nature?nature.name:'Select nature…';
-    _natBtn.classList.toggle('empty',!nature);
-    if(_natChips){
-      if(nature&&nature.increased_stat){
-        var _u=NAT_SC[nature.increased_stat],_d=NAT_SC[nature.decreased_stat];
-        _natChips.innerHTML='<span class="ed-nat-btn-chip" style="background:'+_u.bg+';color:'+_u.c+'">▲ '+_u.s+'</span>'+
-          '<span class="ed-nat-btn-chip" style="background:'+_d.bg+';color:'+_d.c+'">▼ '+_d.s+'</span>';
-        _natChips.style.display='flex';
-      }else{_natChips.innerHTML='';_natChips.style.display='none';}
+
+  // ── Stat header: sprite + name + ability ─────────────────────────────
+  _edRefreshStatHeader(poke, displayPoke, isMegaPreview);
+
+  // ── Preview bar button states ─────────────────────────────────────────
+  if (edMegaFormId) {
+    document.querySelectorAll('.preview-btn').forEach(function(b) {
+      var bMode = b.getAttribute('data-preview');
+      b.classList.toggle('active', bMode === edMegaPreview);
+      b.classList.toggle('mega-active', bMode === 'mega' && edMegaPreview === 'mega');
+    });
+    var pb = document.getElementById('edPreviewBar');
+    if (pb) {pb.style.display = '';}
+  } else {
+    var pb2 = document.getElementById('edPreviewBar');
+    if (pb2) {pb2.style.display = 'none';}
+  }
+}
+
+/**
+ * _edRefreshStatHeader(basePoke, displayPoke, isMegaPreview)
+ * Updates the stat-poke-head sprite, name, and ability in place.
+ */
+function _edRefreshStatHeader(basePoke, displayPoke, isMegaPreview) {
+  var spriteEl = document.querySelector('.stat-poke-sprite');
+  var nameEl   = document.querySelector('.stat-poke-name');
+  var abilEl   = document.querySelector('.stat-poke-ability');
+  if (spriteEl && displayPoke.sprite_url) {spriteEl.src = displayPoke.sprite_url;}
+  if (nameEl) {
+    var badge = isMegaPreview
+      ? ' <span class="mega-badge"><img src="' + _escSt(MEGA_STONE_URL) + '" onerror="this.style.display=\'none\'" alt=""> MEGA</span>'
+      : '';
+    nameEl.innerHTML = _escSt(displayPoke.name) + badge;
+  }
+  if (abilEl) {
+    if (isMegaPreview && displayPoke.ability1) {
+      abilEl.innerHTML = 'Ability: <span class="mega-ability-text">' + _escSt(displayPoke.ability1) + '</span>';
+    } else {
+      abilEl.innerHTML = 'Ability: <strong style="color:var(--text)">' + _escSt(basePoke.ability1 || '') + '</strong>';
     }
   }
 }
 
-function edSwitchView(view){
-  edView=view;
-  document.querySelectorAll('#statSection .bs-view-btn').forEach(function(b){b.classList.toggle('active',b.dataset.view===view)});
-  var b=document.getElementById('ed-barsView'),h=document.getElementById('ed-hexView');
-  if(b)b.classList.toggle('active',view==='bars');
-  if(h)h.classList.toggle('active',view==='hex');
-  edRefresh();
+/** HTML-escape helper (local copy; mega.js also has _esc) */
+function _escSt(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// SP controls (respects 66-cap)
-function edSet(key,val){
-  var requested=Math.max(0,Math.min(32,parseInt(val)||0));
-  var other=BSK.reduce(function(s,k){return s+(k===key?0:spV[k])},0);
-  var maxAllowed=Math.max(0,SP_MAX-other);
-  spV[key]=Math.min(requested,maxAllowed);
-  edRefresh();
-}
-function edSlide(key,val){edSet(key,val)}
-function edAdj(key,delta){edSet(key,spV[key]+delta)}
-
-// Render the full stat section (called from renderBuildEditor and pickPk)
-function edBuildStatSection(){
-  var p=edGetPoke();
-  if(!p)return '<div style="color:var(--muted);font-size:.82rem;padding:.5rem 0">Select a Pokémon to configure stats</div>';
-  var t1=(TC[p.type_1]||TC.Normal).m,t2=p.type_2?(TC[p.type_2]||TC.Normal).m:null;
-  var html='';
-html+='<div style="display:flex;align-items:center;gap:.65rem;padding:.6rem .7rem;background:var(--surface);border-radius:10px;margin-bottom:.8rem"><img src="'+((editorShiny&&p.shiny_url)?p.shiny_url:(p.image_url||''))+'" onerror="this.style.opacity=0.2" style="width:42px;height:42px;object-fit:contain"><div><div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:nowrap;font-weight:800;font-size:.88rem"><span>'+p.name+'</span>'+(p.form==="Mega"?'<img src="'+MEGA_STONE_URL+'" alt="Mega" style="width:18px;height:18px;object-fit:contain;display:block;flex-shrink:0" onerror="this.style.display=\'none\'">':'')+'</div><div style="display:flex;gap:4px;margin-top:2px"><span class="type-pill" style="background:'+t1+'">'+p.type_1+'</span>'+(p.type_2?'<span class="type-pill" style="background:'+t2+'">'+p.type_2+'</span>':'')+'</div></div></div>';
-  html+='<div class="bs-view-toggle"><button class="bs-view-btn'+(edView==='bars'?' active':'')+'" data-view="bars" onclick="edSwitchView(\'bars\')">Bars</button><button class="bs-view-btn'+(edView==='hex'?' active':'')+'" data-view="hex" onclick="edSwitchView(\'hex\')">Hex</button></div>';
-  html+='<div class="bs-view'+(edView==='bars'?' active':'')+'" id="ed-barsView">'+edBuildBars()+'</div>';
-  html+='<div class="bs-view'+(edView==='hex'?' active':'')+'" id="ed-hexView">'+edBuildHex(p)+'</div>';
-  html+='<div class="bs-total"><span class="bs-total-label">Lv50 Stat Total</span><span class="bs-total-val" id="ed-bstVal">0</span></div>';
-  html+=edBuildSP();
-  html+='<div class="bs-formula">Lv50 · IVs max (31) · <code>1 SP = +1 stat</code></div>';
-  return html;
-}
-
