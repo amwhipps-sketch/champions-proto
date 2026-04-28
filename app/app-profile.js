@@ -955,7 +955,7 @@ if(!usr){
       '<button class="btn prof-delete-btn" onclick="confirmDeleteAccount()"><i class="ph-bold ph-trash"></i> Delete Account</button>'+
     '</div>'+
   '<div style="height:.5rem"></div>');
-  c.innerHTML=card+socialHtml+renderFriendsRow()+achSectionHtml+actSectionHtml+accountHtml;
+  c.innerHTML='<div class="prof-left">'+card+socialHtml+renderFriendsRow()+'</div><div class="prof-right">'+achSectionHtml+actSectionHtml+accountHtml+'</div>';
 updProfileNavIcon();
 }
 

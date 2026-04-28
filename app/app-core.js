@@ -378,7 +378,14 @@ function updProfileNavIcon(){
 function updAuth(){
   var el=document.getElementById('authEl');
   if(usr){
-    el.innerHTML='<div class="user-p"><div class="user-av">⚡</div><span style="overflow:hidden;text-overflow:ellipsis;flex:1;font-weight:500">'+usr.email+'</span></div><button class="ab ab-ghost" onclick="logout()" style="margin-top:3px">Sign Out</button>';
+    var avUrl=userProfile&&userProfile.avatar_url?userProfile.avatar_url:'';
+    var avHtml=avUrl
+      ?'<img src="'+avUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.outerHTML=\'⚡\'">'
+      :'⚡';
+    var avStyle=avUrl?'padding:0;overflow:hidden':'';
+    var displayName=(userProfile&&(userProfile.display_name||userProfile.username))||usr.email;
+    el.innerHTML='<div class="user-p"><div class="user-av" style="'+avStyle+'">'+avHtml+'</div><span style="overflow:hidden;text-overflow:ellipsis;flex:1;font-weight:600">'+displayName+'</span></div>'+
+      '<button class="ab ab-ghost sb-signout" onclick="logout()" style="margin-top:3px;display:flex;align-items:center;gap:.38rem"><i class="ph-bold ph-sign-out"></i><span class="sb-signout-label">Sign Out</span></button>';
   }else{
     el.innerHTML='<div style="display:flex;flex-direction:column;gap:.35rem"><button class="ab ab-red" onclick="authMode=\'login\';showLoginModal()" style="width:100%">Sign In</button><button class="ab ab-ghost" onclick="authMode=\'signup\';showLoginModal()" style="width:100%">Sign Up</button></div>';
   }

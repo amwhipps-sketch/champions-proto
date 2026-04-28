@@ -1,7 +1,7 @@
 /* #SECTION: THEME VARIABLES */
 /* ═══════ THEME VARIABLES ═══════ */
 
-:root{--sw:230px;--sw-c:68px}
+:root{--sw:230px;--sw-c:84px}
 [data-theme="dark"]{
   --bg:#111318;--bg2:#1a1d24;--surface:#22262f;--surface2:#2a2f3a;--surface3:#333a47;
   --border:#2e3542;--border2:#3d4556;--text:#eaf0f6;--text2:#c0ccda;--muted:#7a8899;--muted2:#555f6d;
@@ -42,6 +42,19 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 
 .sb{position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:width .25s cubic-bezier(.4,0,.2,1),background .3s;overflow:hidden}
 .sb.c{width:var(--sw-c)}
+/* Collapsed sidebar: bigger centred icons, hide labels/counts cleanly */
+.sb.c .sb-item{padding:.6rem;justify-content:center;gap:0}
+.sb.c .sb-label,.sb.c .sb-count{display:none}
+.sb.c .sb-icon{width:44px;height:44px;border-radius:11px;font-size:1.25rem}
+.sb.c .sb-toggle{width:44px;height:44px}
+.sb.c .sb-brand{justify-content:center;padding:.9rem .5rem}
+.sb.c .sb-brand-text,.sb.c .sb-brand-sub{display:none}
+/* Collapsed footer: hide user row, icon-only signout, stack theme buttons */
+.sb.c .user-p{display:none}
+.sb.c .sb-signout{justify-content:center;gap:0;padding:.55rem;width:100%;font-size:1.1rem}
+.sb.c .sb-signout .sb-signout-label{display:none}
+.sb.c .theme-row{flex-direction:column;gap:.28rem;align-items:center}
+.sb.c .theme-btn{width:44px;height:36px}
 .sb-brand{padding:1rem;display:flex;align-items:center;gap:.65rem;border-bottom:1px solid var(--border);min-height:60px}
 .sb-logo{width:36px;height:36px;border-radius:10px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px rgba(245,158,11,.3)}
 .sb-logo img{width:100%;height:100%;object-fit:contain}
@@ -904,7 +917,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 /* ═══════ TEAMS MOBILE-FIRST (list + detail + editor) ═══════ */
 /* Team list cards */
 .tml-stack{padding:.9rem 1rem 1.5rem;display:flex;flex-direction:column;gap:.75rem}
-.tml-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer;transition:border-color .15s;position:relative}
+.tml-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden;--tm-col:transparent}
+/* Theme gradient wash — visible when --tm-col is set via inline style */
+.tml-card::before{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;background:linear-gradient(135deg,color-mix(in srgb,var(--tm-col) 22%,transparent) 0%,transparent 58%);z-index:0}
+.tml-card>*{position:relative;z-index:1}
 .tml-card:active{border-color:var(--border2);transform:scale(.995)}
 .tml-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.7rem}
 .tml-head-text{flex:1;min-width:0}
@@ -943,6 +959,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 /* Team detail stack + page-level Bars/Hex toggle + bulk controls */
 .td-stack{padding:.9rem .9rem 1.5rem;display:flex;flex-direction:column;gap:.85rem}
 .td-view-toggle{display:flex;gap:2px;background:var(--surface2);border-radius:10px;padding:3px;align-items:center}
+/* Team hero banner — hidden on mobile, shown on desktop */
+.td-hero{display:none}
 /* Team Editor — Coverage Summary */
 .tm-coverage-card{border-radius:14px;border:1px solid var(--border);background:var(--card);overflow:hidden}
 .tm-coverage-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem .85rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -3509,16 +3527,56 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .bd-moves{grid-template-columns:repeat(4,1fr);gap:10px}
   .bd-move{height:60px;min-height:60px;max-height:60px;border-radius:12px}
 
-  /* ── Teams list: 2-column grid ── */
-  .tml-stack{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;padding:1rem 1.5rem 2rem}
-  .tml-card{transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
-  .tml-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.25);border-color:var(--border2)}
+  /* ── Teams list: auto-fill so 1 team = full width, 2+ = 2 cols ── */
+  .tml-stack{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:1.25rem;padding:1.25rem 2.5rem 2rem}
+  .tml-card{padding:1.35rem 1.35rem 1.1rem;border-radius:18px;transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+  .tml-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.28);border-color:var(--border2)}
+  .tml-name{font-size:1.1rem;font-weight:900;letter-spacing:-.015em}
+  .tml-members{overflow-x:visible;flex-wrap:nowrap;gap:.65rem;margin:.75rem 0 .55rem}
+  .tml-mem{width:88px}
+  .tml-mem-img{width:76px;height:76px;border-radius:16px}
+  .tml-mem-empty{width:76px;height:76px;border-radius:16px}
+  .tml-mem-name{font-size:.7rem}
+  .tml-mem-name{font-size:.67rem}
+
+  /* ── Team detail hero banner ── */
+  .td-hero{
+    display:flex;align-items:flex-end;justify-content:space-around;gap:1rem;
+    padding:1.75rem 2.5rem 1.35rem;
+    background:var(--bg2);border-bottom:1px solid var(--border);
+  }
+  .td-hero-mem{display:flex;flex-direction:column;align-items:center;flex:1;max-width:150px;cursor:pointer}
+  .td-hero-img{width:112px;height:112px;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(0,0,0,.38));transition:transform .18s}
+  .td-hero-mem:hover .td-hero-img{transform:translateY(-5px) scale(1.06)}
+  .td-hero-name{font-size:.75rem;font-weight:700;margin-top:.5rem;text-align:center;color:var(--muted)}
+  .td-hero-empty-img{width:112px;height:112px;border-radius:18px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:1.5rem}
+  .td-hero-slot-empty .td-hero-name{opacity:.35}
 
   /* ── Team detail: 2-column member grid ── */
-  /* td-stack becomes a 2-col grid; only .td-member fills both sides;
-     everything else (summary, toggles, action-bars) spans full width */
-  .td-stack{max-width:960px;margin:0 auto;padding:1rem 1.5rem 2rem;display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+  .td-stack{max-width:none;margin:0;padding:1rem 2.5rem 2rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem}
   .td-stack>:not(.td-member){grid-column:1/-1}
+  /* Odd last member spans full width so it doesn't leave an empty half-row */
+  .td-member:last-child:nth-child(odd){grid-column:1/-1}
+  /* View toggle: constrained width so it doesn't stretch across the full page */
+  .td-view-toggle{max-width:260px}
+  .td-mem-head{padding:.9rem 1.1rem}
+  .td-mem-img{width:72px;height:72px}
+  .td-mem-compact-stats{font-size:.67rem;gap:8px}
+  /* Empty slots: taller on desktop */
+  .td-empty-slot{padding:2rem 1.25rem;font-size:.85rem}
+
+  /* ── Team editor: left/right 2-col split ── */
+  .td-stack.te-editor{display:flex;flex-direction:row;align-items:flex-start;gap:1.5rem;max-width:none;margin:0}
+  .te-left{width:460px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;display:flex;flex-direction:column;gap:.85rem;max-height:calc(100vh - 130px);overflow-y:auto}
+  .te-left::-webkit-scrollbar{width:0}
+  .te-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:.85rem}
+  .te-right .td-empty-slot{padding:2.25rem 1.25rem}
+  /* Identity pickers: wrap on desktop instead of horizontal scroll */
+  .te-left .ti-picker{overflow-x:visible;flex-wrap:wrap;padding-bottom:0}
+  /* Form inputs: more comfortable padding in left col */
+  .te-left .ed-input,.te-left .ed-select{padding:.6rem .8rem;font-size:.88rem}
+  .te-left .ed-textarea{padding:.6rem .8rem;font-size:.88rem;min-height:90px}
+  .te-left .ed-label{font-size:.65rem;margin-top:.7rem}
 
   /* ── Build editor Step 1: Pokémon picker — WOW factor ── */
   .epc-grid{grid-template-columns:repeat(5,1fr);gap:.7rem;margin-top:.6rem}
@@ -3565,6 +3623,53 @@ body.share-loading [onclick="tdPillShare()"]::after{
 
   /* Filter rows: no scrolling needed on desktop — all pills visible */
   .epc-filter-scroll{overflow-x:visible;flex-wrap:wrap;padding-bottom:0}
+
+  /* ── Reference page ── */
+  /* Tab bar + search blocks: wider padding */
+  .ref-tab-bar{padding:0 1.5rem}
+  .ref-search-block{padding:.65rem 1.5rem .5rem}
+  .abl-alpha-hdr{padding:.5rem 1.5rem .15rem}
+  /* Abilities: 2-column grid — alpha headers span both cols */
+  .abl-list{display:grid;grid-template-columns:1fr 1fr;padding:0 1.5rem 2rem;gap:0 1.5rem}
+  .abl-alpha-hdr{grid-column:1/-1}
+  .abl-card{padding:.8rem .6rem .8rem 0}
+  .abl-card:hover{filter:brightness(1.08);background:var(--surface2)}
+  /* Natures: 4-column — bigger cards, taller eq bars */
+  .nat-hybrid-grid{grid-template-columns:repeat(4,1fr)!important;padding:.9rem 2.5rem 2rem;gap:.9rem}
+  .nat-hybrid{padding:1rem 1rem .85rem;border-radius:16px}
+  .nat-hybrid-name{font-size:.95rem;font-weight:900;margin-bottom:.55rem}
+  .eq-track{height:40px!important}
+  .eq-lbl{font-size:.62rem;margin-top:5px}
+  /* Archetype list: 3-column, category headers span full width */
+  .ref-arch-list{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;padding:.9rem 2.5rem 2rem}
+  .ref-arch-cat{grid-column:1/-1;margin:.6rem 0 .25rem;font-size:.68rem}
+  .ref-arch-cat:first-child{margin-top:.1rem}
+  .ref-arch-card{padding:.9rem 1rem;border-radius:14px;margin-bottom:0}
+  /* Reference detail sheet → centred modal on desktop */
+  .ref-det-ov{align-items:center;justify-content:center}
+  .ref-det-sheet{border-radius:20px!important;max-height:82vh;width:520px;max-width:90vw;transform:translateY(16px) scale(.97);padding-bottom:1.5rem}
+  .ref-det-ov.open .ref-det-sheet{transform:translateY(0) scale(1)}
+  .ref-det-handle{display:none}
+
+  /* ── Profile page: 2-col desktop layout ── */
+  #profileContent{display:flex;flex-direction:row;align-items:flex-start;gap:1.5rem;padding:1rem 1.5rem 3rem!important}
+  .prof-left{width:380px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;display:flex;flex-direction:column;gap:.75rem}
+  .prof-right{flex:1;min-width:0}
+  /* Trainer card: fills left col, good horizontal space */
+  .trainer-card{padding:1.5rem 1.75rem;border-radius:18px}
+  /* Stats row: never wrap */
+  .tc-stats{flex-wrap:nowrap;gap:1.5rem}
+  /* Social stats: flush in left col */
+  .prof-social-stats{padding:.6rem 0 .25rem;gap:.7rem}
+  /* Friends: card style in left col */
+  .fr-collapse{border-radius:12px;border:1px solid var(--border);background:var(--card);margin:0}
+  /* Right col section headers */
+  .prof-right .prof-sec-hdr{padding:.85rem 0}
+  /* Achievements: 3-col auto-fill */
+  .ach-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.8rem;padding:.5rem 0 1.5rem}
+  /* Flush padding on right-col inner content */
+  .prof-right .prof-account-actions{padding:.5rem 0 1.5rem}
+  .prof-right .activity-list{padding:.2rem 0 .5rem}
 }
 
 /* ═══════ WIDESCREEN (1600px+) ═══════ */

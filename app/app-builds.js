@@ -307,6 +307,14 @@ function showBuildBack(){
   if(typeof appNavContext!=='undefined'&&appNavContext.buildSource==='profile'){
     appNavContext.buildSource='list';if(typeof dashNav==='function')dashNav('profile');return;
   }
+  if(typeof appNavContext!=='undefined'&&appNavContext.buildSource==='team'){
+    appNavContext.buildSource='list';
+    document.querySelectorAll('.sb-item').forEach(function(n){n.classList.toggle('active',n.dataset.p==='teams')});
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('show')});
+    var tp=document.getElementById('pg-teams');if(tp)tp.classList.add('show');
+    if(typeof renderTeams==='function')renderTeams();
+    return;
+  }
   showBuildList();
 }
 function showBuildDetail(id,source){detailBuildId=id;buildView='detail';
