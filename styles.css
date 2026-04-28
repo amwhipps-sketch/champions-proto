@@ -917,10 +917,14 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 /* ═══════ TEAMS MOBILE-FIRST (list + detail + editor) ═══════ */
 /* Team list cards */
 .tml-stack{padding:.9rem 1rem 1.5rem;display:flex;flex-direction:column;gap:.75rem}
-.tml-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden;--tm-col:transparent}
+.tml-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer;transition:border-color .15s;position:relative;--tm-col:transparent}
 /* Theme gradient wash — visible when --tm-col is set via inline style */
 .tml-card::before{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;background:linear-gradient(135deg,color-mix(in srgb,var(--tm-col) 22%,transparent) 0%,transparent 58%);z-index:0}
 .tml-card>*{position:relative;z-index:1}
+/* Lift card with open overflow menu above siblings (fixes dropdown clipping) */
+.tml-card:has(.om-menu.open),.bld-card:has(.om-menu.open){z-index:10}
+/* Build cards also need isolation so transform doesn't trap om-menu stacking context */
+.bld-card{isolation:isolate}
 .tml-card:active{border-color:var(--border2);transform:scale(.995)}
 .tml-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.7rem}
 .tml-head-text{flex:1;min-width:0}
