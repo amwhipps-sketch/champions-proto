@@ -10,6 +10,64 @@
 
 var ablPickerCache={};
 
+// ─── Desktop Finder-window picker (≥1024px only) ─────────────────────────────
+// On desktop, pickers open as a THIRD column — stat calc | form | picker.
+// The form stays fully visible. Mobile behavior is completely unchanged.
+function _edDeskPicker(html,title){
+  if(window.innerWidth<1024)return false;
+  var col=document.getElementById('edPickerCol');
+  if(!col)return false;
+  col.innerHTML=
+    '<div class="ed-dp-hdr">'+
+      '<span class="ed-dp-title">'+title+'</span>'+
+      '<button class="ed-dp-close" onclick="_edDeskClose()">✕</button>'+
+    '</div>'+
+    '<div class="ed-dp-body">'+html+'</div>';
+  col.classList.add('open');
+  // Match height to form col so all 3 cols line up, with inner scroll
+  requestAnimationFrame(function(){
+    var formCol=document.querySelector('.ed-right-col');
+    if(formCol){
+      var h=Math.min(formCol.getBoundingClientRect().height,window.innerHeight-160);
+      col.style.height=h+'px';
+    }
+  });
+  return true;
+}
+function _edDeskClose(){
+  var col=document.getElementById('edPickerCol');
+  if(!col)return;
+  col.style.height='';
+  col.classList.remove('open');
+  setTimeout(function(){col.innerHTML='';},300);
+}
+// Strategy section: desktop intercept — opens text fields in third panel
+function _edStrategyClick(e){
+  if(window.innerWidth<1024)return true; // mobile: normal <details> toggle
+  e.preventDefault();
+  var b=editBuildId?allBuilds.find(function(x){return x.id===editBuildId}):null;
+  var html=
+    '<div><label class="ed-label">Win Condition</label>'+
+    '<textarea class="ed-textarea ed-dp-strat-ta" id="edWin">'+(b?b.win_condition||'':'')+'</textarea></div>'+
+    '<div style="margin-top:.6rem"><label class="ed-label">Strengths</label>'+
+    '<textarea class="ed-textarea ed-dp-strat-ta" id="edStr">'+(b?b.strengths||'':'')+'</textarea></div>'+
+    '<div style="margin-top:.6rem"><label class="ed-label">Weaknesses</label>'+
+    '<textarea class="ed-textarea ed-dp-strat-ta" id="edWeak">'+(b?b.weaknesses||'':'')+'</textarea></div>';
+  _edDeskPicker(html,'Strategy');
+  // Size textareas to fill the panel height evenly
+  requestAnimationFrame(function(){
+    var col=document.getElementById('edPickerCol');
+    if(!col)return;
+    var available=col.getBoundingClientRect().height - 54 - 24 - 3*32 - 2*10; // header + padding + labels + gaps
+    var taH=Math.max(Math.floor(available/3), 60);
+    ['edWin','edStr','edWeak'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)el.style.height=taH+'px';
+    });
+  });
+  return false;
+}
+
 // ═══════════════════════════════════════
 // TEAM BUILD PICKER
 // Slot-aware build picker used by the Teams editor.
@@ -210,12 +268,19 @@ async function _loadAblOptionsForPkmn(pokemonId){
 }
 
 function openAbilityPicker(){
-  var ov=document.getElementById('abilityPickerOv');
-  if(!ov)return;
   var curAbi=document.getElementById('edAbi')?document.getElementById('edAbi').value||''  :'';
-  // Get Pokémon display name from the selected card (set by edRefresh)
   var pkmnName=selPkmnId?(window.allPkmn||[]).find(function(p){return p.id===selPkmnId}):null;
   var pkmnLabel=pkmnName?pkmnName.name:'';
+  // Desktop: render inline in right column
+  if(_edDeskPicker('<div class="abl-pk-list" id="ablPkList"><div class="abl-pk-empty">Loading…</div></div>',
+    'Choose Ability'+(pkmnLabel?' — '+pkmnLabel:''))){
+    if(!selPkmnId){var l=document.getElementById('ablPkList');if(l)l.innerHTML='<div class="abl-pk-empty">Select a Pokémon first to see its legal abilities.</div>';return;}
+    _loadAblOptionsForPkmn(selPkmnId).then(function(opts){_renderAblPickerContent(opts,curAbi);});
+    return;
+  }
+  // Mobile: bottom-sheet overlay
+  var ov=document.getElementById('abilityPickerOv');
+  if(!ov)return;
   ov.innerHTML='<div class="abl-pk-sheet">'+
     '<div class="abl-pk-handle"></div>'+
     '<div class="abl-pk-head">'+
@@ -230,9 +295,7 @@ function openAbilityPicker(){
     document.getElementById('ablPkList').innerHTML='<div class="abl-pk-empty">Select a Pokémon first to see its legal abilities.</div>';
     return;
   }
-  _loadAblOptionsForPkmn(selPkmnId).then(function(opts){
-    _renderAblPickerContent(opts,curAbi);
-  });
+  _loadAblOptionsForPkmn(selPkmnId).then(function(opts){_renderAblPickerContent(opts,curAbi);});
 }
 
 function _renderAblPickerContent(opts,curAbi){
@@ -261,9 +324,9 @@ function pickAbility(name){
   if(inp)inp.value=name;
   if(lbl)lbl.textContent=name;
   if(btn)btn.classList.remove('empty');
-  // Drop G.3: update ability warning icon after picking
   if(warn)warn.style.display=abilityLegalityState(name,selPkmnId)==='illegal'?'inline':'none';
-  closeAbilityPicker();
+  _edDeskClose(); // desktop: return to form
+  closeAbilityPicker(); // mobile: close overlay
 }
 
 function closeAbilityPicker(){
@@ -286,9 +349,12 @@ var _NAT_GROUPS=[
 ];
 
 function openNaturePicker(){
+  var curId=(document.getElementById('edNat')||{}).value||'';
+  // Desktop: render inline in right column
+  if(_edDeskPicker('<div class="nat-pk-list" id="natPkList">'+_renderNaturePickerContent(curId)+'</div>','Choose Nature'))return;
+  // Mobile: bottom-sheet overlay
   var ov=document.getElementById('naturePickerOv');
   if(!ov)return;
-  var curId=(document.getElementById('edNat')||{}).value||'';
   ov.innerHTML='<div class="nat-pk-sheet">'+
     '<div class="nat-pk-handle"></div>'+
     '<div class="nat-pk-head">'+
@@ -349,8 +415,9 @@ function _natEqBarsCompact(n){
 function pickNature(id){
   var hidEl=document.getElementById('edNat');
   if(hidEl)hidEl.value=id;
-  edRefresh(); // recalcs stats + syncs button label + chips
-  closeNaturePicker();
+  edRefresh();
+  _edDeskClose(); // desktop: return to form
+  closeNaturePicker(); // mobile: close overlay
 }
 
 function closeNaturePicker(){
@@ -370,11 +437,24 @@ var _pickerCategory='all',_pickerSearch='';
 
 function openItemPicker(){
   _pickerCategory='all';_pickerSearch='';
-  renderItemPickerShell();  // Builds the stable shell: handle, title, search input, tabs
-  renderItemPickerBody();   // Fills the item list (updated on search/filter changes only)
+  // Desktop: render item picker inside third panel
+  if(window.innerWidth>=1024){
+    // Inject a stub #itemPickerOv into the panel; render functions target it by id
+    if(_edDeskPicker('<div id="itemPickerOv" style="display:block;background:transparent"></div>','Choose Item')){
+      renderItemPickerShell();
+      renderItemPickerBody();
+      return;
+    }
+  }
+  renderItemPickerShell();
+  renderItemPickerBody();
   document.getElementById('itemPickerOv').classList.add('open');
 }
-function closeItemPicker(){document.getElementById('itemPickerOv').classList.remove('open')}
+function closeItemPicker(){
+  _edDeskClose(); // desktop: close third panel
+  var ov=document.getElementById('itemPickerOv');
+  if(ov)ov.classList.remove('open'); // mobile
+}
 // Search & filter changes update ONLY the body — shell (with the focused input) stays intact.
 function setPickerCategory(cat){_pickerCategory=cat||'all';updatePickerTabs();renderItemPickerBody()}
 function setPickerSearch(val){_pickerSearch=(val||'').toLowerCase();updatePickerTabs();renderItemPickerBody()}
@@ -648,8 +728,36 @@ function bdMoveCard(name,pokemonId,fontSize){
 async function openMovePicker(slot){
   if(!selPkmnId){toast('Pick a Pokémon first','warn');return}
   _mpSlot=slot;_mpSearch='';_mpType='all';_mpGlossOpen=false;
-  // Render shell immediately with a loading stub so the overlay feels responsive.
   _mpLearnset=learnsetCache[selPkmnId]||[];
+
+  // Desktop: persistent 4-tab Finder-window pane
+  if(window.innerWidth>=1024){
+    var p=allPkmn.find(function(x){return x.id===selPkmnId});
+    var pname=p?displayName(p):'';
+    var slotTabs=[1,2,3,4].map(function(n){
+      var el=document.getElementById('edM'+n);var filled=el&&el.value;
+      return '<button class="ed-dp-slot-tab'+(n===slot?' active':'')+'" onclick="switchPickerSlot('+n+')">'+
+        '<span class="ed-dp-slot-n">Move '+n+'</span>'+
+        '<span class="ed-dp-slot-lbl">'+(filled?el.value:'Pick a move')+'</span>'+
+      '</button>';
+    }).join('');
+    var deskHtml=
+      '<div class="ed-dp-slot-tabs" id="mpDeskTabs">'+slotTabs+'</div>'+
+      '<div style="margin-bottom:.6rem"><input id="mpSearch" type="text" placeholder="Search moves…" value="" oninput="setMovePickerSearch(this.value)" autocomplete="off" style="width:100%;padding:.52rem .9rem;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-family:inherit;font-size:.85rem"></div>'+
+      '<div class="ed-dp-type-wrap" id="mpTypes"></div>'+
+      '<div id="mpList" class="ed-dp-move-list"></div>';
+    if(_edDeskPicker(deskHtml,'Pick Moves — '+pname)){
+      var types=mpLegalTypes();
+      var tw=document.getElementById('mpTypes');
+      if(tw)tw.innerHTML='<button class="mp-tp all on" onclick="setMovePickerType(\'all\')">ALL</button>'+
+        types.map(function(t){return '<button class="mp-tp t-'+t+'" onclick="setMovePickerType(\''+t+'\')">'+t.toUpperCase()+'</button>'}).join('');
+      renderMovePickerBody();
+      if(!learnsetCache[selPkmnId]){_mpLearnset=await loadLearnset(selPkmnId);renderMovePickerBody();}
+      return;
+    }
+  }
+
+  // Mobile: existing bottom-sheet overlay
   renderMovePickerShell();
   renderMovePickerBody();
   document.getElementById('movePickerOv').classList.add('open');
@@ -659,7 +767,10 @@ async function openMovePicker(slot){
     renderMovePickerBody();
   }
 }
-function closeMovePicker(){document.getElementById('movePickerOv').classList.remove('open')}
+function closeMovePicker(){
+  _edDeskClose(); // desktop: return to form (no-op on mobile)
+  document.getElementById('movePickerOv').classList.remove('open'); // mobile
+}
 
 // Search / filter handlers — body-only re-render so search input keeps focus.
 function setMovePickerSearch(v){_mpSearch=(v||'').toLowerCase();renderMovePickerBody()}
@@ -673,6 +784,23 @@ function toggleMoveGloss(){_mpGlossOpen=!_mpGlossOpen;var p=document.getElementB
 function switchPickerSlot(n){
   if(!n||n===_mpSlot)return;
   _mpSlot=n;
+  // Desktop: update tabs + crossfade move list (no re-animation)
+  var deskTabs=document.getElementById('mpDeskTabs');
+  if(deskTabs){
+    deskTabs.querySelectorAll('.ed-dp-slot-tab').forEach(function(btn,i){
+      var s=i+1;var el=document.getElementById('edM'+s);var filled=el&&el.value;
+      btn.classList.toggle('active',s===n);
+      var lbl=btn.querySelector('.ed-dp-slot-lbl');
+      if(lbl)lbl.textContent=filled?el.value:'Pick a move';
+    });
+    var list=document.getElementById('mpList');
+    if(list){
+      list.style.opacity='0';
+      setTimeout(function(){renderMovePickerBody();list.style.opacity='1';},150);
+    }
+    return;
+  }
+  // Mobile: existing full shell re-render
   renderMovePickerShell();
   renderMovePickerBody();
 }
@@ -866,6 +994,23 @@ var _archPkCatIcons={Offense:'ph-sword',Setup:'ph-trend-up',Defense:'ph-shield',
 var _archPkCatOrder=['Offense','Setup','Defense','Support','VGC'];
 
 function openArchPicker(){
+  // Desktop: render as third panel
+  var archContent='<div class="arch-pk-list" id="archPkList">'+_archPickerRows()+'</div>'+
+    '<div class="arch-pk-custom">'+
+      '<div class="arch-pk-custom-label"><i class="ph-bold ph-pencil"></i> Custom</div>'+
+      '<div class="arch-pk-custom-row">'+
+        '<input class="arch-pk-custom-input" id="archCustomIn" type="text" placeholder="Type a custom archetype…" maxlength="40" value="'+(edSelArch&&!BLD_ARCHETYPES.find(function(a){return a.name===edSelArch;})?edSelArch:'')+'" autocomplete="off">'+
+        '<button class="arch-pk-custom-btn" onclick="_archPickCustom()" type="button">Use</button>'+
+      '</div>'+
+    '</div>';
+  if(_edDeskPicker(archContent,'Archetype')){
+    setTimeout(function(){
+      var inp=document.getElementById('archCustomIn');
+      if(inp)inp.onkeydown=function(e){if(e.key==='Enter')_archPickCustom();};
+    },0);
+    return;
+  }
+  // Mobile: bottom-sheet overlay
   var ov=document.getElementById('archPickerOv');
   if(!ov){
     ov=document.createElement('div');ov.id='archPickerOv';
@@ -932,7 +1077,8 @@ function _archPickCustom(){
 
 function pickArch(name){
   selBldArch(name);
-  closeArchPicker();
+  _edDeskClose(); // desktop: close third panel
+  closeArchPicker(); // mobile: close overlay
 }
 
 function closeArchPicker(){

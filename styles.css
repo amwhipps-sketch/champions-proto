@@ -384,6 +384,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 /* Subsection: Build editor */
 .editor{padding:1rem 2rem 2rem}
 .ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+/* Desktop 2-column layout: stat calc left (sticky), build details right */
+.ed-desktop-layout{display:flex;flex-direction:column;gap:1rem;margin-top:1rem}
+.ed-left-col,.ed-right-col{display:flex;flex-direction:column;gap:1rem}
+.ed-left-col>.ed-card,.ed-right-col>.ed-card,.ed-right-col>details{margin-top:0!important}
 .ed-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem}
 .ed-card h3{font-size:.9rem;font-weight:700;margin-bottom:.8rem}
 .ed-label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem;margin-top:.6rem}
@@ -3378,6 +3382,189 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .sec-tog .sl{font-size:.88rem}
   /* Section content */
   .sec-body{padding:0 1.5rem 1.2rem}
+
+  /* ── Build editor Step 2: full-width 2-column layout ── */
+  .editor{padding:1rem 1.5rem 2rem}
+  .ed-desktop-layout{flex-direction:row;align-items:flex-start;gap:1.25rem;margin-top:1.25rem}
+  /* Left col: stat calc — sticky, shorter to avoid scroll even with hex chart */
+  .ed-left-col{width:420px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;max-height:calc(100vh - 140px);overflow-y:auto}
+  .ed-right-col{flex:1;min-width:280px}
+  .ed-left-col .ed-card h3{font-size:1rem}
+  /* Hex chart: visible but not oversized — fits left col without scroll */
+  .bs-hex-svg{max-width:260px}
+
+  /* ── Item picker: keep as centered modal (complex list, works well) ── */
+  .picker-ov{align-items:center!important;justify-content:center}
+  .picker-sheet{border-radius:20px!important;max-height:78vh;margin:0}
+
+  /* ── Desktop Finder-window: third picker column ── */
+  /* Starts at width:0, slides to 380px. Height set by JS to match form col. */
+  .ed-picker-col{
+    width:0;overflow:hidden;flex-shrink:0;
+    background:var(--card);
+    border:1px solid transparent;
+    transition:width .28s cubic-bezier(.4,0,.2,1),border-color .28s;
+    position:sticky;top:0;align-self:flex-start;
+    border-radius:14px;
+  }
+  .ed-picker-col.open{
+    width:380px;overflow-y:auto;overflow-x:hidden;
+    border-color:var(--border);
+  }
+
+  /* Right-arrows on desktop: move slots + item button point right → panel direction */
+  .ms-chev{transform:rotate(-90deg)}
+  .be-select .ph-caret-down{transform:rotate(-90deg)}
+
+  /* Strategy: hide inline content on desktop (opens in third panel) */
+  .ed-desktop-layout details>*:not(summary){display:none}
+  .ed-desktop-layout details summary{cursor:pointer}
+  .ed-strat-caret{margin-left:auto;flex-shrink:0;font-size:.85rem;color:var(--muted)}
+
+  /* Item picker sheet inside the third panel — strip mobile-only chrome */
+  .ed-picker-col .picker-handle{display:none}
+  .ed-picker-col .picker-sheet{
+    border-radius:0;border:none;max-height:none;padding:0;
+    background:transparent;animation:none;
+  }
+  .ed-picker-col .picker-head{border-radius:0;padding:.5rem 0 .5rem}
+
+  /* Panel body: just padding — parent panel's overflow-y:auto handles scrolling */
+  .ed-picker-col .ed-dp-body{padding:.75rem 1.1rem .75rem}
+  /* Strategy textareas — heights set by JS in _edStrategyClick to fill the panel */
+  .ed-dp-strat-ta{resize:vertical;width:100%}
+
+  /* Stat col: tighter card padding so hex fits without scrolling */
+  .ed-left-col .ed-card{padding:.75rem .85rem}
+  /* Hex chart: keep 260px but reduce outer SVG container padding */
+  .ed-left-col .bs-hex-wrap{padding:0}
+
+  /* Header: title + close button */
+  .ed-dp-hdr{
+    display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+    padding:.9rem 1.1rem .75rem;
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;background:var(--bg2);z-index:5;
+  }
+  .ed-dp-title{font-weight:900;font-size:.92rem;letter-spacing:-.01em;color:var(--text);flex:1}
+  .ed-dp-close{
+    width:28px;height:28px;border-radius:8px;border:1px solid var(--border);
+    background:var(--surface);color:var(--muted);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:.8rem;
+    font-family:inherit;transition:all .12s;flex-shrink:0;
+  }
+  .ed-dp-close:hover{border-color:var(--red);color:var(--red)}
+  /* Scrollable body inside the picker panel */
+  .ed-dp-body{padding:.75rem 1.1rem 2rem}
+
+  /* Move picker: 4 persistent slot tabs */
+  .ed-dp-slot-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.8rem}
+  .ed-dp-slot-tab{
+    padding:.5rem .4rem;border-radius:10px;border:1.5px solid var(--border);
+    background:var(--card);cursor:pointer;font-family:inherit;text-align:left;
+    transition:border-color .15s,background .15s;
+  }
+  .ed-dp-slot-tab.active{border-color:var(--red);background:var(--red-bg)}
+  .ed-dp-slot-n{display:block;font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+  .ed-dp-slot-tab.active .ed-dp-slot-n{color:var(--red)}
+  .ed-dp-slot-lbl{display:block;font-size:.72rem;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ed-dp-slot-tab.active .ed-dp-slot-lbl{color:var(--red)}
+  /* Move list */
+  .ed-dp-type-wrap{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}
+  .ed-dp-move-list{display:flex;flex-direction:column;gap:2px;transition:opacity .15s ease}
+
+  /* ── Selected Pokémon card: premium desktop treatment ── */
+  .sel-card{padding:1rem 1.2rem;border-radius:18px;border-width:1.5px}
+  .sel-content{padding:.45rem .5rem;border-radius:14px;gap:.9rem}
+  .sel-img{width:90px;height:90px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}
+  .sel-name{font-size:1.2rem;font-weight:900;letter-spacing:-.02em}
+  .sel-dex{font-size:.65rem;margin-top:3px}
+  .sel-types{margin-top:6px;gap:5px}
+  .sel-types .type-pill{font-size:11px;padding:3px 11px}
+  .sel-btn{padding:.45rem .8rem;font-size:.72rem;min-height:36px;border-radius:10px}
+  .sel-bg{opacity:.2}
+
+  /* ── Save bar: desktop — premium, right-aligned, not full-width ── */
+  .save-bar{padding:.85rem 1.5rem;background:color-mix(in srgb,var(--bg2) 94%,transparent);border-top:1px solid var(--border2);justify-content:flex-end;gap:.65rem}
+  .save-bar .btn{flex:0 0 auto;min-width:130px;padding:.65rem 1.6rem;font-size:.88rem;border-radius:12px;font-weight:700}
+  /* Cancel: ghost outline, not full width */
+  .save-bar .btn-ghost{border-color:var(--border2);color:var(--text2)}
+  .save-bar .btn-ghost:hover{border-color:var(--red);color:var(--red)}
+  /* Save: red with stronger shadow */
+  .save-bar .btn-red{box-shadow:0 4px 14px rgba(239,68,68,.35)}
+
+  /* ── Builds list: 2-column grid ── */
+  .bld-stack{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;padding:1rem 1.5rem 2rem}
+  .bld-card{transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+  .bld-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.25);border-color:var(--border2)}
+  /* Bigger avatar in build list cards */
+  .bld-head-img{width:68px;height:68px;border-radius:14px}
+
+  /* ── Build detail: constrained width + bigger hero ── */
+  .bd-stack{max-width:880px;margin:0 auto;padding:1rem 1.5rem 2rem}
+  .bd-hero{min-height:320px;padding:1.5rem 1rem 1.2rem;border-radius:18px}
+  .bd-hero img{width:200px;height:200px}
+  .bd-hero-types .type-pill{font-size:.78rem;padding:4px 14px}
+  /* 4-wide move grid on desktop (4 slots → single row) */
+  .bd-moves{grid-template-columns:repeat(4,1fr);gap:10px}
+  .bd-move{height:60px;min-height:60px;max-height:60px;border-radius:12px}
+
+  /* ── Teams list: 2-column grid ── */
+  .tml-stack{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;padding:1rem 1.5rem 2rem}
+  .tml-card{transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+  .tml-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.25);border-color:var(--border2)}
+
+  /* ── Team detail: 2-column member grid ── */
+  /* td-stack becomes a 2-col grid; only .td-member fills both sides;
+     everything else (summary, toggles, action-bars) spans full width */
+  .td-stack{max-width:960px;margin:0 auto;padding:1rem 1.5rem 2rem;display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+  .td-stack>:not(.td-member){grid-column:1/-1}
+
+  /* ── Build editor Step 1: Pokémon picker — WOW factor ── */
+  .epc-grid{grid-template-columns:repeat(5,1fr);gap:.7rem;margin-top:.6rem}
+
+  /* Cards: premium feel matching the Pokédex grid treatment */
+  .epc-card{
+    border-radius:16px;border-width:1.5px;
+    overflow:visible;           /* allows shiny holo to extend */
+    transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
+  }
+  .epc-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.3);border-color:var(--border2)}
+  .epc-card.selected{border-color:var(--green);box-shadow:0 0 0 2.5px var(--green),0 8px 24px rgba(34,197,94,.25)}
+
+  /* Art: tall with inset shadow so sprite floats above gradient */
+  .epc-art{height:140px;overflow:hidden;border-radius:0}
+  .epc-art img{width:118px;height:118px}
+  /* Amplify the Pokéball watermark on desktop */
+  .epc-art .wm{opacity:.1}
+  /* Inset shadow depth on art */
+  .epc-card .epc-art{box-shadow:inset 0 -24px 32px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.05)}
+
+  /* Text: bolder and more legible */
+  .epc-name{font-size:.82rem;font-weight:900;letter-spacing:-.015em}
+  .epc-dex{font-size:.62rem;font-weight:700}
+  .epc-top{padding:.5rem .6rem .25rem}
+  .epc-bot{padding:.38rem .6rem .55rem;gap:4px}
+  .epc-bot .type-pill{font-size:9.5px;padding:2px 8px}
+
+  /* Shiny holo — same fix as pb-card (overflow:visible + transparent border) */
+  .epc-card.shiny-holo{border:2.5px solid transparent;background-clip:padding-box}
+  .epc-card.shiny-holo::after{
+    content:'';position:absolute;inset:-2.5px;border-radius:18px;
+    background:linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3,#54a0ff,#5f27cd,#ff6b6b);
+    background-size:300% 300%;animation:holoShift 3s ease infinite;
+    z-index:-1;opacity:.88;
+  }
+  .epc-card.shiny-holo::before{
+    content:'';position:absolute;inset:-2.5px;border-radius:18px;
+    background:linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3,#54a0ff,#5f27cd,#ff6b6b);
+    background-size:300% 300%;animation:holoShift 3s ease infinite;
+    filter:blur(8px);opacity:.45;z-index:-1;
+  }
+  .epc-card.shiny-holo:hover{box-shadow:0 12px 40px rgba(139,92,246,.35),0 4px 16px rgba(0,0,0,.3)}
+
+  /* Filter rows: no scrolling needed on desktop — all pills visible */
+  .epc-filter-scroll{overflow-x:visible;flex-wrap:wrap;padding-bottom:0}
 }
 
 /* ═══════ WIDESCREEN (1600px+) ═══════ */
@@ -3385,4 +3572,6 @@ body.share-loading [onclick="tdPillShare()"]::after{
 @media(min-width:1600px){
   /* Pokédex: 5 columns at true widescreen */
   .dex-grid{grid-template-columns:repeat(5,1fr)}
+  /* Build picker: 6 columns at widescreen */
+  .epc-grid{grid-template-columns:repeat(6,1fr)}
 }
