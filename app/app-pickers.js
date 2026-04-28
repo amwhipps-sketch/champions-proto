@@ -24,13 +24,37 @@ function _edDeskPicker(html,title){
     '</div>'+
     '<div class="ed-dp-body">'+html+'</div>';
   col.classList.add('open');
+  // Match height to form col so all 3 cols line up, with inner scroll
+  requestAnimationFrame(function(){
+    var formCol=document.querySelector('.ed-right-col');
+    if(formCol){
+      var h=Math.min(formCol.getBoundingClientRect().height,window.innerHeight-160);
+      col.style.height=h+'px';
+    }
+  });
   return true;
 }
 function _edDeskClose(){
   var col=document.getElementById('edPickerCol');
   if(!col)return;
+  col.style.height='';
   col.classList.remove('open');
   setTimeout(function(){col.innerHTML='';},300);
+}
+// Strategy section: desktop intercept — opens text fields in third panel
+function _edStrategyClick(e){
+  if(window.innerWidth<1024)return true; // mobile: normal <details> toggle
+  e.preventDefault();
+  var b=editBuildId?allBuilds.find(function(x){return x.id===editBuildId}):null;
+  var html=
+    '<div><label class="ed-label">Win Condition</label>'+
+    '<textarea class="ed-textarea" id="edWin" style="min-height:80px;resize:vertical">'+(b?b.win_condition||'':'')+'</textarea></div>'+
+    '<div style="margin-top:.7rem"><label class="ed-label">Strengths</label>'+
+    '<textarea class="ed-textarea" id="edStr" style="min-height:60px;resize:vertical">'+(b?b.strengths||'':'')+'</textarea></div>'+
+    '<div style="margin-top:.7rem"><label class="ed-label">Weaknesses</label>'+
+    '<textarea class="ed-textarea" id="edWeak" style="min-height:60px;resize:vertical">'+(b?b.weaknesses||'':'')+'</textarea></div>';
+  _edDeskPicker(html,'Strategy');
+  return false;
 }
 
 // ═══════════════════════════════════════
@@ -402,11 +426,24 @@ var _pickerCategory='all',_pickerSearch='';
 
 function openItemPicker(){
   _pickerCategory='all';_pickerSearch='';
-  renderItemPickerShell();  // Builds the stable shell: handle, title, search input, tabs
-  renderItemPickerBody();   // Fills the item list (updated on search/filter changes only)
+  // Desktop: render item picker inside third panel
+  if(window.innerWidth>=1024){
+    // Inject a stub #itemPickerOv into the panel; render functions target it by id
+    if(_edDeskPicker('<div id="itemPickerOv" style="display:block;background:transparent"></div>','Choose Item')){
+      renderItemPickerShell();
+      renderItemPickerBody();
+      return;
+    }
+  }
+  renderItemPickerShell();
+  renderItemPickerBody();
   document.getElementById('itemPickerOv').classList.add('open');
 }
-function closeItemPicker(){document.getElementById('itemPickerOv').classList.remove('open')}
+function closeItemPicker(){
+  _edDeskClose(); // desktop: close third panel
+  var ov=document.getElementById('itemPickerOv');
+  if(ov)ov.classList.remove('open'); // mobile
+}
 // Search & filter changes update ONLY the body — shell (with the focused input) stays intact.
 function setPickerCategory(cat){_pickerCategory=cat||'all';updatePickerTabs();renderItemPickerBody()}
 function setPickerSearch(val){_pickerSearch=(val||'').toLowerCase();updatePickerTabs();renderItemPickerBody()}
