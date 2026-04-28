@@ -693,6 +693,7 @@ var hdr='<div class="pg-head" style="'+tdHeadStyle+'"><div class="vh-title-row">
       '<span class="vh-back" onclick="showTeamBack()">← '+t.name+'</span>'+
       '<div class="vh-actions" onclick="event.stopPropagation()">'+
         '<button class="vh-btn vh-btn-sm vh-btn-edit" onclick="showTeamEditor(\''+t.id+'\')" aria-label="Edit team">✏️</button>'+
+        '<button class="vh-btn vh-btn-sm" onclick="confirmDelTeam(\''+t.id+'\',\''+safeName+'\')" aria-label="Delete team" style="color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,var(--border))"><i class="ph-bold ph-trash"></i></button>'+
         '<div class="om-wrap">'+
           '<button class="vh-btn vh-btn-sm vh-btn-more" onclick="toggleTmlOm(\''+t.id+'\')" aria-label="More">⋮</button>'+
           '<div class="om-menu" id="tmlOm-'+t.id+'">'+
