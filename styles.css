@@ -943,6 +943,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 /* Team detail stack + page-level Bars/Hex toggle + bulk controls */
 .td-stack{padding:.9rem .9rem 1.5rem;display:flex;flex-direction:column;gap:.85rem}
 .td-view-toggle{display:flex;gap:2px;background:var(--surface2);border-radius:10px;padding:3px;align-items:center}
+/* Team hero banner — hidden on mobile, shown on desktop */
+.td-hero{display:none}
 /* Team Editor — Coverage Summary */
 .tm-coverage-card{border-radius:14px;border:1px solid var(--border);background:var(--card);overflow:hidden}
 .tm-coverage-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem .85rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -3514,24 +3516,37 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .tml-card{padding:1.1rem 1.1rem .9rem;transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
   .tml-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.25);border-color:var(--border2)}
   .tml-name{font-size:1.02rem}
-  /* Member sprites: bigger, no overflow scroll needed on desktop */
   .tml-members{overflow-x:visible;flex-wrap:nowrap;gap:.55rem;margin:.55rem 0}
   .tml-mem{width:78px}
   .tml-mem-img{width:66px;height:66px;border-radius:14px}
   .tml-mem-empty{width:66px;height:66px;border-radius:14px}
   .tml-mem-name{font-size:.67rem}
 
+  /* ── Team detail hero banner ── */
+  .td-hero{
+    display:flex;align-items:flex-end;justify-content:center;gap:.75rem;
+    padding:1.5rem 2.5rem 1.1rem;
+    background:var(--bg2);border-bottom:1px solid var(--border);
+  }
+  .td-hero-mem{display:flex;flex-direction:column;align-items:center;flex:1;max-width:130px;cursor:pointer}
+  .td-hero-img{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.38));transition:transform .18s}
+  .td-hero-mem:hover .td-hero-img{transform:translateY(-4px) scale(1.05)}
+  .td-hero-name{font-size:.7rem;font-weight:700;margin-top:.4rem;text-align:center;color:var(--muted)}
+  .td-hero-empty-img{width:96px;height:96px;border-radius:16px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:1.4rem}
+  .td-hero-slot-empty .td-hero-name{opacity:.35}
+
   /* ── Team detail: 2-column member grid ── */
-  /* td-stack becomes a 2-col grid; only .td-member fills both sides;
-     everything else (summary, toggles, action-bars) spans full width */
   .td-stack{max-width:1120px;margin:0 auto;padding:1rem 2.5rem 2rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem}
   .td-stack>:not(.td-member){grid-column:1/-1}
-  /* Member cards: bigger sprite, more padding */
   .td-mem-head{padding:.9rem 1rem}
   .td-mem-img{width:72px;height:72px}
-  .td-mem-head-info .td-mem-name{font-size:.95rem}
-  /* Compact stat summary in collapsed header: slightly larger */
   .td-mem-compact-stats{font-size:.67rem;gap:8px}
+
+  /* ── Team editor: left/right 2-col split ── */
+  .td-stack.te-editor{display:flex;flex-direction:row;align-items:flex-start;gap:1.25rem}
+  .te-left{width:380px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;display:flex;flex-direction:column;gap:.85rem;max-height:calc(100vh - 130px);overflow-y:auto}
+  .te-left::-webkit-scrollbar{width:0}
+  .te-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:.85rem}
 
   /* ── Build editor Step 1: Pokémon picker — WOW factor ── */
   .epc-grid{grid-template-columns:repeat(5,1fr);gap:.7rem;margin-top:.6rem}
