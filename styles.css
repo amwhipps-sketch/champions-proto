@@ -3378,6 +3378,33 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .sec-tog .sl{font-size:.88rem}
   /* Section content */
   .sec-body{padding:0 1.5rem 1.2rem}
+
+  /* ── Builds list: 2-column grid ── */
+  .bld-stack{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;padding:1rem 1.5rem 2rem}
+  .bld-card{transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+  .bld-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.25);border-color:var(--border2)}
+  /* Bigger avatar in build list cards */
+  .bld-head-img{width:68px;height:68px;border-radius:14px}
+
+  /* ── Build detail: constrained width + bigger hero ── */
+  .bd-stack{max-width:880px;margin:0 auto;padding:1rem 1.5rem 2rem}
+  .bd-hero{min-height:320px;padding:1.5rem 1rem 1.2rem;border-radius:18px}
+  .bd-hero img{width:200px;height:200px}
+  .bd-hero-types .type-pill{font-size:.78rem;padding:4px 14px}
+  /* 4-wide move grid on desktop (4 slots → single row) */
+  .bd-moves{grid-template-columns:repeat(4,1fr);gap:10px}
+  .bd-move{height:60px;min-height:60px;max-height:60px;border-radius:12px}
+
+  /* ── Teams list: 2-column grid ── */
+  .tml-stack{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;padding:1rem 1.5rem 2rem}
+  .tml-card{transition:border-color .15s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+  .tml-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.25);border-color:var(--border2)}
+
+  /* ── Team detail: 2-column member grid ── */
+  /* td-stack becomes a 2-col grid; only .td-member fills both sides;
+     everything else (summary, toggles, action-bars) spans full width */
+  .td-stack{max-width:960px;margin:0 auto;padding:1rem 1.5rem 2rem;display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+  .td-stack>:not(.td-member){grid-column:1/-1}
 }
 
 /* ═══════ WIDESCREEN (1600px+) ═══════ */
