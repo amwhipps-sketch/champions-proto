@@ -338,6 +338,8 @@ async function signup(){
       }
       renderDash();renderDex();renderItems();renderBuilds();renderTeams();renderProfile();
       toast('Account created!');
+      // Show onboarding guide on first signup
+      setTimeout(function(){if(!localStorage.getItem('cf_onboarded')&&typeof showOnboarding==='function')showOnboarding();},600);
     }else if(r.ok){
       // Account exists (previously unconfirmed) or autoconfirm variant — log in directly
       try{

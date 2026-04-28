@@ -71,6 +71,7 @@ function renderDash(){
             '<div class="da-signout-btns">'+
               '<button class="btn btn-red" onclick="authMode=\'login\';showLoginModal()">Sign In</button>'+
               '<button class="btn btn-ghost" onclick="authMode=\'signup\';showLoginModal()">Create Account</button>'+
+              '<button class="btn btn-dex" onclick="dashNav(\'dex\')"><i class="ph-bold ph-book-open-text"></i> Browse Pokédex →</button>'+
             '</div>'+
           '</div>'+
         '</div>'+
@@ -96,7 +97,10 @@ function renderDash(){
             '<div class="da-signout-feat-desc">Share builds, follow friends and discover the meta</div>'+
           '</div>'+
         '</div>'+
-      '</div>';
+      '</div>'+
+      '<div class="da-section"><div class="da-section-title">👀 Featured Builds</div></div>'+
+      '<div class="da-fb-list" id="daFeaturedBuilds"><div class="empty" style="padding:.75rem 0"><div class="em" style="font-size:1.1rem">⏳</div></div></div>';
+    _loadFeaturedBuilds();
     return;
   }
 
@@ -496,4 +500,93 @@ async function _doHomeSearch(q){
   if(html==='<div style="padding:0 1rem .5rem"></div>')
     html='<div class="empty" style="padding:1.5rem 0;text-align:center"><div class="em">😶</div><div style="font-size:.78rem;color:var(--muted)">No results for "'+_esc(q)+'"</div></div>';
   body.innerHTML=html;
+}
+
+// ── Featured Builds (signed-out home) ─────────────────────
+async function _loadFeaturedBuilds(){
+  var el=document.getElementById('daFeaturedBuilds');
+  if(!el)return;
+  try{
+    var rows=await fetch(API+'/rest/v1/builds?is_public=eq.true&select=id,name,pokemon_name,type_1,type_2,image_url,is_shiny,shiny_url,battle_format,move_1,move_2,share_code&order=created_at.desc&limit=4',
+      {headers:{'apikey':ANON,'Content-Type':'application/json'}}).then(function(r){return r.json()}).catch(function(){return[]});
+    if(!rows||!rows.length){el.innerHTML='<div class="empty" style="padding:.75rem 0;font-size:.78rem;color:var(--muted)">No public builds yet — be the first!</div>';return}
+    el.innerHTML=rows.map(function(b){
+      var t1=TC[b.type_1]||TC.Normal;var t2=b.type_2?TC[b.type_2]:null;
+      var img=b.is_shiny&&b.shiny_url?b.shiny_url:(b.image_url||'');
+      var grad=t2?'linear-gradient(135deg,'+t1.m+'66,'+t2.m+'66)':'linear-gradient(135deg,'+t1.m+'55,'+t1.d+'66)';
+      var moves=[b.move_1,b.move_2].filter(Boolean).map(function(m){return'<span class="da-fb-move">'+m+'</span>'}).join('');
+      var click=b.share_code?'onclick="location.hash=\'#/b/'+b.share_code+'\'"':'';
+      return'<div class="da-fb-card" '+click+' style="background:'+grad+'">'+
+        (img?'<img class="da-fb-sprite" src="'+img+'" onerror="this.style.opacity=\'0.15\'" loading="lazy">':'<div style="width:52px;flex-shrink:0"></div>')+
+        '<div class="da-fb-info">'+
+          '<div class="da-fb-name">'+b.name+'</div>'+
+          '<div class="da-fb-pkmn">'+b.pokemon_name+(b.battle_format?' · '+b.battle_format:'')+'</div>'+
+          '<div class="da-fb-moves">'+moves+'</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }catch(e){el.innerHTML='';}
+}
+
+// ── Onboarding Guide (Drop I.5) ───────────────────────────
+var _obStep=0;
+var _obSteps=[
+  {icon:'⚔️',title:'Welcome to Champions Forge',type:'hl',
+   desc:'The team builder made specifically for Pokémon Champions — build optimised sets, assemble rosters and share with the community.',
+   hl:[
+    {icon:'🎮',bg:'var(--red-bg)',col:'var(--red)',strong:'Built for Champions rules',span:'Level 50, maxed IVs, SP-based stat system'},
+    {icon:'✓',bg:'var(--green-bg)',col:'var(--green)',strong:'Free, no ads, no grind',span:'Everything is available from the start'}
+   ]},
+  {icon:'📊',title:'What are SP Points?',type:'hl',
+   desc:'SP is Champions\' equivalent of EVs — simpler maths, same strategy.',
+   hl:[
+    {icon:'=',bg:'var(--purple-bg)',col:'var(--purple)',strong:'1 SP = +1 to that stat',span:'No ÷4 conversion — what you see is what you get'},
+    {icon:'📈',bg:'var(--gold-bg)',col:'var(--gold)',strong:'66 SP total, max 32 per stat',span:'Like 508 EVs / 252 cap but cleaner'},
+    {icon:'⚡',bg:'var(--red-bg)',col:'var(--red)',strong:'Level 50, IVs always maxed',span:'No breeding, no grinding — just strategy'}
+   ]},
+  {icon:'🗺️',title:'What can you do?',type:'feats',
+   desc:'Everything you need to compete, all in one place.',
+   feats:[
+    {icon:'⚔️',bg:'var(--red-bg)',col:'var(--red)',strong:'Build competitive sets',span:'SP allocator, stat calc, move picker, ability + item'},
+    {icon:'🏆',bg:'var(--blue-bg)',col:'var(--blue)',strong:'Assemble your team',span:'6-Pokémon roster with type coverage analysis'},
+    {icon:'👥',bg:'var(--purple-bg)',col:'var(--purple)',strong:'Share &amp; discover',span:'Public builds, friend system, community feed'},
+    {icon:'📖',bg:'var(--green-bg)',col:'var(--green)',strong:'Track your Pokédex',span:'261 Pokémon including Megas, Regionals &amp; Shinies'}
+   ]},
+  {icon:'🚀',title:'Ready to build?',type:'cta',
+   desc:'Create your first competitive build — pick a Pokémon, allocate your SP, choose your moves and share it with the community.'}
+];
+function showOnboarding(){
+  _obStep=0;
+  var mod=document.getElementById('onboardingMod');if(!mod)return;
+  mod.classList.add('open');_renderObStep();
+}
+function _renderObStep(){
+  var s=_obSteps[_obStep];var total=_obSteps.length;
+  var dots='';for(var i=0;i<total;i++)dots+='<div class="ob-dot'+(i===_obStep?' active':'')+'"></div>';
+  document.getElementById('obDots').innerHTML=dots;
+  var body='<span class="ob-icon">'+s.icon+'</span><div class="ob-title">'+s.title+'</div><div class="ob-desc">'+s.desc+'</div>';
+  if(s.type==='hl'){
+    body+='<div class="ob-hl">'+s.hl.map(function(r){
+      return'<div class="ob-hl-row"><div class="ob-hl-icon" style="background:'+r.bg+';color:'+r.col+'">'+r.icon+'</div><div class="ob-hl-text"><strong>'+r.strong+'</strong><span>'+r.span+'</span></div></div>';
+    }).join('')+'</div>';
+  }else if(s.type==='feats'){
+    body+='<div class="ob-feats">'+s.feats.map(function(f){
+      return'<div class="ob-feat"><div class="ob-feat-icon" style="background:'+f.bg+';color:'+f.col+'">'+f.icon+'</div><div class="ob-feat-txt"><strong>'+f.strong+'</strong><span>'+f.span+'</span></div></div>';
+    }).join('')+'</div>';
+  }
+  document.getElementById('obBody').innerHTML=body;
+  var btn=document.getElementById('obNextBtn');var skip=document.getElementById('obSkipBtn');
+  if(_obStep===total-1){
+    btn.innerHTML='⚔️ Create my first build';btn.classList.add('ob-finish');skip.textContent='Maybe later';
+  }else{
+    btn.innerHTML='Next <i class="ph-bold ph-arrow-right"></i>';btn.classList.remove('ob-finish');skip.textContent='Skip guide';
+  }
+}
+function obNext(){if(_obStep<_obSteps.length-1){_obStep++;_renderObStep();}else{obFinish();}}
+function obSkip(){localStorage.setItem('cf_onboarded','1');document.getElementById('onboardingMod').classList.remove('open');}
+function obFinish(){
+  localStorage.setItem('cf_onboarded','1');
+  document.getElementById('onboardingMod').classList.remove('open');
+  if(typeof dashNav==='function')dashNav('builds');
+  if(typeof showBuildEditor==='function')showBuildEditor();
 }

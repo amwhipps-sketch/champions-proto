@@ -7,7 +7,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Champions Forge">
-<meta name="description" content="Competitive Pokémon team builder — build, track, and analyse">
+<meta name="description" content="Build competitive Pokémon sets, assemble your team and analyse type coverage. Free, mobile-first, built for Pokémon Champions.">
+<meta property="og:title" content="Champions Forge — Pokémon Team Builder">
+<meta property="og:description" content="Build competitive sets, assemble your team and analyse type coverage. Free, mobile-first, built for Pokémon Champions.">
+<meta property="og:image" content="https://otterlyclueless.github.io/champions-forge/icons/icon-512.png">
+<meta property="og:url" content="https://otterlyclueless.github.io/champions-forge/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Champions Forge — Pokémon Team Builder">
+<meta name="twitter:description" content="Build competitive sets, assemble your team and analyse type coverage. Free, mobile-first, built for Pokémon Champions.">
+<meta name="twitter:image" content="https://otterlyclueless.github.io/champions-forge/icons/icon-512.png">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -218,6 +227,18 @@
       </div>
       <div class="home-sheet-body" id="homeSearchBody">
         <div class="empty" style="padding:2rem 0;text-align:center"><div class="em" style="font-size:1.5rem">🔍</div><div style="font-size:.78rem;color:var(--muted)">Type to search…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Guide (Drop I.5) -->
+  <div class="ob-ov" id="onboardingMod">
+    <div class="ob-sheet">
+      <div class="ob-dots" id="obDots"></div>
+      <div class="ob-body" id="obBody"></div>
+      <div class="ob-nav">
+        <button class="ob-skip" id="obSkipBtn" onclick="obSkip()">Skip guide</button>
+        <button class="ob-next" id="obNextBtn" onclick="obNext()">Next <i class="ph-bold ph-arrow-right"></i></button>
       </div>
     </div>
   </div>

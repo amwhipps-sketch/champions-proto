@@ -852,6 +852,49 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;t
 .act-chev{color:var(--muted2);font-size:.8rem;flex-shrink:0;margin-left:.1rem}
 
 /* Subsection: Confirm modal */
+/* ── Onboarding Guide (Drop I.5) ── */
+.ob-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:450;display:none;align-items:flex-end;justify-content:center}
+.ob-ov.open{display:flex}
+.ob-sheet{width:100%;max-width:480px;background:var(--bg2);border-radius:26px 26px 0 0;border-top:1px solid var(--border);padding:1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom,0px));animation:sheetUp .3s cubic-bezier(.33,1,.68,1);transition:background .3s}
+.ob-dots{display:flex;gap:.45rem;justify-content:center;margin-bottom:1.5rem}
+.ob-dot{width:6px;height:6px;border-radius:3px;background:var(--border2);transition:all .3s}
+.ob-dot.active{width:22px;background:var(--red)}
+.ob-icon{font-size:2.8rem;display:block;text-align:center;margin-bottom:.8rem}
+.ob-title{font-size:1.25rem;font-weight:900;letter-spacing:-.025em;text-align:center;margin-bottom:.5rem;line-height:1.2}
+.ob-desc{font-size:.86rem;color:var(--text2);text-align:center;line-height:1.65;margin-bottom:1.1rem}
+.ob-hl{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:.85rem;margin-bottom:1.1rem;display:flex;flex-direction:column;gap:.55rem}
+.ob-hl-row{display:flex;align-items:center;gap:.7rem}
+.ob-hl-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0}
+.ob-hl-text strong{display:block;font-size:.8rem;font-weight:800}
+.ob-hl-text span{font-size:.72rem;color:var(--muted)}
+.ob-feats{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.1rem}
+.ob-feat{display:flex;align-items:center;gap:.7rem;background:var(--surface);border-radius:11px;padding:.65rem .85rem}
+.ob-feat-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ob-feat-txt strong{font-size:.8rem;font-weight:800;display:block}
+.ob-feat-txt span{font-size:.7rem;color:var(--muted)}
+.ob-nav{display:flex;gap:.65rem;align-items:center;margin-top:.1rem}
+.ob-skip{flex:1;font-family:inherit;font-size:.8rem;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;text-align:left;padding:.5rem 0;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.ob-skip:hover{color:var(--text2)}
+.ob-next{background:var(--red);color:#fff;border:none;border-radius:12px;padding:.75rem 1.6rem;font-family:inherit;font-size:.88rem;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:.38rem;transition:filter .15s;white-space:nowrap}
+.ob-next:hover{filter:brightness(1.1)}
+.ob-next.ob-finish{background:linear-gradient(135deg,var(--red),#b91c1c);box-shadow:0 4px 16px rgba(239,68,68,.35)}
+/* Replay btn on Profile */
+.prof-replay-btn{display:flex;align-items:center;gap:.38rem;padding:.38rem .55rem;border-radius:8px;background:none;border:none;color:var(--muted2);font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;margin-top:.6rem;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.prof-replay-btn:hover{color:var(--muted)}
+/* Featured builds on signed-out home */
+.da-fb-list{display:flex;flex-direction:column;gap:.55rem;padding:0 1rem .5rem}
+.da-fb-card{display:flex;align-items:center;gap:.8rem;padding:.7rem .9rem;border-radius:14px;cursor:pointer;transition:opacity .15s;position:relative;overflow:hidden;min-height:72px}
+.da-fb-card:active{opacity:.82}
+.da-fb-sprite{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 3px 8px rgba(0,0,0,.4));flex-shrink:0;position:relative;z-index:1;image-rendering:pixelated}
+.da-fb-info{flex:1;min-width:0;position:relative;z-index:1}
+.da-fb-name{font-size:.85rem;font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.da-fb-pkmn{font-size:.68rem;color:rgba(255,255,255,.65);margin-top:1px;font-weight:600}
+.da-fb-moves{display:flex;gap:.3rem;margin-top:.35rem;overflow:hidden}
+.da-fb-move{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.18);color:#fff;white-space:nowrap}
+/* Browse Dex button on signed-out home */
+.da-signout-btns .btn-dex{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.da-signout-btns .btn-dex:hover{border-color:var(--border2);color:var(--text)}
+
 .modal-ov{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);backdrop-filter:blur(2px)}
 .modal-ov.open{display:flex}
 .modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;max-width:380px;width:90%;text-align:center}

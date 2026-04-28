@@ -948,6 +948,7 @@ if(!usr){
       '<div class="prof-account-row"><span class="prof-account-email"><i class="ph-bold ph-envelope"></i> '+usr.email+'</span></div>'+
       '<button class="btn btn-ghost prof-signout-btn" onclick="logout()"><i class="ph-bold ph-sign-out"></i> Sign Out</button>'+
       '<a class="prof-support-btn" href="https://ko-fi.com/otterlyclueless" target="_blank" rel="noopener noreferrer"><i class="ph-bold ph-coffee"></i> Support this project</a>'+
+      '<button class="prof-replay-btn" onclick="if(typeof showOnboarding===\'function\')showOnboarding()"><i class="ph-bold ph-play-circle"></i> Replay app guide</button>'+
     '</div>'+
     '<div class="prof-danger-card">'+
       '<div class="prof-danger-label"><i class="ph-bold ph-warning"></i> Danger Zone</div>'+
