@@ -3384,12 +3384,23 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .sec-body{padding:0 1.5rem 1.2rem}
 
   /* ── Build editor Step 2: full-width 2-column layout ── */
-  /* No max-width — fills the content area edge to edge */
   .editor{padding:1rem 1.5rem 2rem}
   .ed-desktop-layout{flex-direction:row;align-items:flex-start;gap:1.25rem;margin-top:1.25rem}
+  /* Left col: stat calc — sticky, shorter to avoid scroll even with hex chart */
   .ed-left-col{width:420px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;max-height:calc(100vh - 140px);overflow-y:auto}
-  .ed-right-col{flex:1;min-width:0}
+  /* Right col: form fields — max-width so they don't stretch 700px wide */
+  .ed-right-col{flex:1;min-width:0;max-width:600px}
   .ed-left-col .ed-card h3{font-size:1rem}
+  /* Hex chart: smaller on desktop so left col doesn't need to scroll */
+  .bs-hex-svg{max-width:210px}
+
+  /* ── Picker/sheet overlays → centered modals on desktop ── */
+  /* Mobile pattern (bottom sheet) → desktop pattern (centered dialog) */
+  .picker-ov{align-items:center!important;justify-content:center}
+  .picker-sheet{border-radius:20px!important;max-height:78vh;margin:0}
+  /* Move picker sheet specifically */
+  .mp-sheet{border-radius:20px;margin:0;max-height:78vh}
+  /* Nature + ability + item pickers — all use picker-sheet, covered above */
 
   /* ── Selected Pokémon card: premium desktop treatment ── */
   .sel-card{padding:1rem 1.2rem;border-radius:18px;border-width:1.5px}
