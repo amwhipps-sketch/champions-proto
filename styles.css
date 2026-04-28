@@ -3428,6 +3428,18 @@ body.share-loading [onclick="tdPillShare()"]::after{
     background:transparent;animation:none;
   }
   .ed-picker-col .picker-head{border-radius:0;padding:.5rem 0 .5rem}
+
+  /* Panel body stretches to fill col height so strategy textareas expand */
+  .ed-picker-col .ed-dp-body{display:flex;flex-direction:column;height:calc(100% - 54px);overflow:hidden}
+  .ed-dp-strat-body{flex:1;display:flex;flex-direction:column;gap:.55rem;overflow:hidden}
+  .ed-dp-strat-row{flex:1;display:flex;flex-direction:column;min-height:0}
+  .ed-dp-strat-ta{flex:1;resize:none;min-height:0!important}
+
+  /* Stat col: tighter card padding so hex fits without scrolling */
+  .ed-left-col .ed-card{padding:.75rem .85rem}
+  /* Hex chart: keep 260px but reduce outer SVG container padding */
+  .ed-left-col .bs-hex-wrap{padding:0}
+
   /* Header: title + close button */
   .ed-dp-hdr{
     display:flex;align-items:center;justify-content:space-between;gap:.75rem;
