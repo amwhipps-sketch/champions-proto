@@ -3388,8 +3388,7 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .ed-desktop-layout{flex-direction:row;align-items:flex-start;gap:1.25rem;margin-top:1.25rem}
   /* Left col: stat calc — sticky, shorter to avoid scroll even with hex chart */
   .ed-left-col{width:420px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;max-height:calc(100vh - 140px);overflow-y:auto}
-  /* Right col: form fields — max-width so they don't stretch 700px wide */
-  .ed-right-col{flex:1;min-width:0;max-width:600px}
+  .ed-right-col{flex:1;min-width:280px}
   .ed-left-col .ed-card h3{font-size:1rem}
   /* Hex chart: visible but not oversized — fits left col without scroll */
   .bs-hex-svg{max-width:260px}
@@ -3398,47 +3397,54 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .picker-ov{align-items:center!important;justify-content:center}
   .picker-sheet{border-radius:20px!important;max-height:78vh;margin:0}
 
-  /* ── Desktop Finder-window picker pane (.ed-dp-*) ── */
-  /* Nature, Ability and Move pickers render inline inside .ed-right-col */
-  .ed-dp-wrap{padding:0 0 5rem;height:100%;overflow-y:auto}
+  /* ── Desktop Finder-window: third picker column ── */
+  /* Starts at 0 width, slides open to 380px when .open */
+  .ed-picker-col{
+    width:0;overflow:hidden;flex-shrink:0;
+    background:var(--bg2);
+    border-left:1px solid transparent;
+    transition:width .28s cubic-bezier(.4,0,.2,1),border-color .28s;
+    position:sticky;top:0;align-self:flex-start;
+    max-height:calc(100vh - 140px);
+    border-radius:0 14px 14px 0;
+  }
+  .ed-picker-col.open{
+    width:380px;overflow-y:auto;overflow-x:hidden;
+    border-left-color:var(--border);
+  }
+  /* Header: title + close button */
   .ed-dp-hdr{
-    display:flex;align-items:center;gap:.75rem;
-    padding:.1rem 0 .9rem;
+    display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+    padding:.9rem 1.1rem .75rem;
     border-bottom:1px solid var(--border);
-    margin-bottom:.9rem;
-    position:sticky;top:0;background:var(--bg);z-index:5;
-    padding-top:.85rem;
+    position:sticky;top:0;background:var(--bg2);z-index:5;
   }
-  .ed-dp-back{
-    padding:.32rem .7rem;border-radius:8px;border:1px solid var(--border);
-    background:var(--card);color:var(--muted);font-family:inherit;
-    font-size:.72rem;font-weight:700;cursor:pointer;
-    display:flex;align-items:center;gap:.3rem;transition:all .12s;flex-shrink:0;
+  .ed-dp-title{font-weight:900;font-size:.92rem;letter-spacing:-.01em;color:var(--text);flex:1}
+  .ed-dp-close{
+    width:28px;height:28px;border-radius:8px;border:1px solid var(--border);
+    background:var(--surface);color:var(--muted);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:.8rem;
+    font-family:inherit;transition:all .12s;flex-shrink:0;
   }
-  .ed-dp-back:hover{border-color:var(--red);color:var(--red)}
-  .ed-dp-title{font-weight:900;font-size:.95rem;letter-spacing:-.01em;flex:1;color:var(--text)}
+  .ed-dp-close:hover{border-color:var(--red);color:var(--red)}
+  /* Scrollable body inside the picker panel */
+  .ed-dp-body{padding:.75rem 1.1rem 2rem}
 
   /* Move picker: 4 persistent slot tabs */
-  .ed-dp-slot-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;margin-bottom:.85rem}
+  .ed-dp-slot-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.8rem}
   .ed-dp-slot-tab{
-    padding:.55rem .5rem;border-radius:11px;border:1.5px solid var(--border);
+    padding:.5rem .4rem;border-radius:10px;border:1.5px solid var(--border);
     background:var(--card);cursor:pointer;font-family:inherit;text-align:left;
     transition:border-color .15s,background .15s;
   }
   .ed-dp-slot-tab.active{border-color:var(--red);background:var(--red-bg)}
-  .ed-dp-slot-n{display:block;font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+  .ed-dp-slot-n{display:block;font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
   .ed-dp-slot-tab.active .ed-dp-slot-n{color:var(--red)}
-  .ed-dp-slot-lbl{display:block;font-size:.75rem;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ed-dp-slot-lbl{display:block;font-size:.72rem;font-weight:700;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ed-dp-slot-tab.active .ed-dp-slot-lbl{color:var(--red)}
-
-  /* Move list in desktop pane — reuses .mp-row styles */
+  /* Move list */
   .ed-dp-type-wrap{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}
   .ed-dp-move-list{display:flex;flex-direction:column;gap:2px;transition:opacity .15s ease}
-
-  /* Nature / ability list in desktop pane */
-  .ed-dp-list .nat-pk-list,.nat-pk-list.ed-dp-list,.ed-dp-list{
-    max-height:none!important;overflow:visible;
-  }
 
   /* ── Selected Pokémon card: premium desktop treatment ── */
   .sel-card{padding:1rem 1.2rem;border-radius:18px;border-width:1.5px}
