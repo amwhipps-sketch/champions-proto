@@ -451,6 +451,7 @@ function renderTeams(){
   '</div>'+
 '<div class="vh-actions" onclick="event.stopPropagation()">'+
   '<button class="vh-btn vh-btn-md vh-btn-edit" onclick="showTeamEditor(\''+t.id+'\')" aria-label="Edit team">✏️</button>'+
+  '<button class="vh-btn vh-btn-md" onclick="confirmDelTeam(\''+t.id+'\',\''+safeName+'\')" aria-label="Delete team" style="color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,var(--border))"><i class="ph-bold ph-trash"></i></button>'+
   '<div class="om-wrap">'+
     '<button class="vh-btn vh-btn-md vh-btn-more" onclick="event.stopPropagation();toggleTmlOm(\''+t.id+'\')" aria-label="More">⋮</button>'+
       '<div class="om-menu" id="tmlOm-'+t.id+'">'+
