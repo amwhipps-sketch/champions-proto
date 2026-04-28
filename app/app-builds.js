@@ -594,7 +594,9 @@ function renderEditorForm(c){
       '<div style="margin-top:.7rem"><label class="ed-label">Win Condition</label><textarea class="ed-textarea" id="edWin">'+(b?b.win_condition||'':'')+'</textarea></div>'+
       '<div class="ed-row" style="margin-top:.5rem"><div><label class="ed-label">Strengths</label><textarea class="ed-textarea" id="edStr">'+(b?b.strengths||'':'')+'</textarea></div><div><label class="ed-label">Weaknesses</label><textarea class="ed-textarea" id="edWeak">'+(b?b.weaknesses||'':'')+'</textarea></div></div>'+
     '</details>'+
-    '</div></div>'+ // close .ed-right-col and .ed-desktop-layout
+    '</div>'+ // close .ed-right-col
+    '<div class="ed-picker-col" id="edPickerCol"></div>'+ // third panel — desktop picker slides in here
+    '</div>'+ // close .ed-desktop-layout
     // Hidden shiny button — editorShiny state already lives in JS, but saveBuild reads #edShiny.active so we keep a hidden mirror
     '<button type="button" class="fpill'+(editorShiny?' active':'')+'" id="edShiny" style="display:none"></button>'+
     // Drop F.2a: Share toggle — only renders when editing an existing build.
