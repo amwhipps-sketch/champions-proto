@@ -357,8 +357,8 @@ function togglePickerType(t){pickerTypeFilter=pickerTypeFilter===t?null:t;render
 function togglePickerForm(f){pickerFormFilter=pickerFormFilter===f?null:f;renderBuilds()}
 function toggleBuildShiny(){editorShiny=!editorShiny;renderBuilds()}
 
-function closeAllBldOms(){document.querySelectorAll('[id^="bldOm-"]').forEach(function(m){m.classList.remove('open')})}
-function toggleBldOm(id){var m=document.getElementById('bldOm-'+id);if(!m)return;var wasOpen=m.classList.contains('open');closeAllBldOms();if(!wasOpen)m.classList.add('open')}
+function closeAllBldOms(){document.querySelectorAll('[id^="bldOm-"]').forEach(function(m){m.classList.remove('open');var c=m.closest('.bld-card');if(c)c.classList.remove('om-active')})}
+function toggleBldOm(id){var m=document.getElementById('bldOm-'+id);if(!m)return;var wasOpen=m.classList.contains('open');closeAllBldOms();if(!wasOpen){m.classList.add('open');var c=m.closest('.bld-card');if(c)c.classList.add('om-active')}}
 function bldMenuDelete(ev,id){
   if(ev){ev.preventDefault();ev.stopPropagation();if(ev.stopImmediatePropagation)ev.stopImmediatePropagation()}
   var b=allBuilds.find(function(x){return x.id===id});
