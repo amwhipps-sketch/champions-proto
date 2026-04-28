@@ -3230,3 +3230,61 @@ body.share-loading [onclick="tdPillShare()"]::after{
     height:40px;
   }
 }
+ 
+/* #SECTION: DESKTOP RESPONSIVE */
+/* ═══════ DESKTOP (1024px+) ═══════ */
+
+@media(min-width:1024px){
+
+  /* ── Global page head ── */
+  .pg-head{padding:1.1rem 1.5rem .85rem}
+
+  /* ── Dashboard: 4-across stat cards ── */
+  .da-stats{grid-template-columns:repeat(4,1fr);padding:1.2rem 1.5rem .9rem;gap:.75rem}
+
+  /* ── Dashboard: 2-column body ── */
+  /* DOM order: da-col-side first (mobile shows QA before feed), CSS order reverses on desktop */
+  .da-body{display:flex;gap:1rem;padding:0 1.5rem 2rem;align-items:flex-start}
+  .da-col-main{flex:1;min-width:0;order:1}
+  .da-col-side{width:256px;flex-shrink:0;order:2}
+
+  /* Strip horizontal padding from section headings inside columns */
+  .da-col-side .da-section,.da-col-main .da-section{padding:0}
+
+  /* Feed: remove inline padding so it sits flush in its column */
+  .da-col-main #daFeedBody{padding:0!important}
+
+  /* Quick action buttons: vertical stacked cards in side column */
+  .da-col-side .da-quick-row{flex-direction:column;padding:0;gap:.4rem}
+  .da-col-side .da-qrow-btn{display:flex;align-items:center;gap:.65rem;padding:.65rem .8rem;text-align:left;flex:none;width:100%}
+  .da-col-side .da-qrow-icon{font-size:1rem;margin-bottom:0;width:32px;height:32px;border-radius:9px;background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .da-col-side .da-qrow-lbl{font-size:.82rem;color:var(--text2);font-weight:700}
+
+  /* Hide mobile notif/search header buttons — not needed with sidebar + wide layout */
+  .da-hd-btns{display:none!important}
+
+  /* ── Pokédex: single-row filter bar ── */
+  .dex-filter-bar{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.5rem .6rem;flex-wrap:nowrap;position:relative}
+  #dexSearch{width:280px;flex-shrink:0;margin-bottom:0!important}
+  .dex-filter-strip{flex:1;padding-bottom:0;overflow-x:auto}
+
+  /* Type dropdown: absolutely positioned below bar, 6-col grid */
+  .dex-type-dropdown{
+    position:absolute;top:100%;left:0;right:0;z-index:90;
+    background:var(--bg2);border:1px solid var(--border);border-top:none;
+    border-radius:0 0 12px 12px;box-shadow:0 8px 24px rgba(0,0,0,.2);
+    grid-template-columns:repeat(6,1fr);padding:.65rem;gap:.3rem;
+  }
+
+  /* ── Pokédex: 4-column grid ── */
+  .dex-grid{grid-template-columns:repeat(4,1fr);max-width:none;padding:.85rem 1.5rem 1.5rem;gap:.65rem}
+  .pb-card-art{height:116px}
+  .pb-card-art img{width:96px;height:96px}
+}
+
+/* ═══════ WIDESCREEN (1440px+) ═══════ */
+
+@media(min-width:1440px){
+  /* Pokédex: 5 columns */
+  .dex-grid{grid-template-columns:repeat(5,1fr)}
+}
