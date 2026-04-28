@@ -3551,20 +3551,24 @@ body.share-loading [onclick="tdPillShare()"]::after{
   /* Move body: padding tweak with art section showing */
   .bld-card .bld-body-area{padding-top:.85rem}
 
-  /* ── Build detail: 2-col layout ── */
-  .bd-stack{max-width:none;margin:0;padding:0;display:flex;flex-direction:column}
-  .bd-desktop-wrap{display:flex;flex-direction:row;align-items:flex-start;flex:1}
-  /* Left col: art panel */
-  .bd-left{width:320px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;align-self:stretch}
-  .bd-left .bd-hero{border-radius:0!important;border:none!important;min-height:280px;padding:2rem 1.5rem 1.5rem}
-  .bd-left .bd-hero img{width:210px;height:210px}
-  .bd-left .bd-summary{padding:.75rem 1.2rem;border-bottom:1px solid var(--border)}
-  .bd-left .card{border-radius:0!important;border:none!important;border-bottom:1px solid var(--border)!important;background:transparent!important;padding:1rem 1.2rem}
+  /* ── Build detail: 2-col layout — full viewport height ── */
+  .bd-stack{max-width:none;margin:0;padding:0;display:flex;flex-direction:column;flex:1}
+  .bd-desktop-wrap{display:flex;flex-direction:row;align-items:stretch;flex:1}
+  /* Left col: wider art panel, stretches full height */
+  .bd-left{width:380px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column}
+  .bd-left .bd-hero{border-radius:0!important;border:none!important;min-height:300px;padding:2rem 1.5rem 1.5rem}
+  .bd-left .bd-hero img{width:220px;height:220px}
+  .bd-left .bd-summary{padding:.75rem 1.4rem;border-bottom:1px solid var(--border)}
+  /* Only strip card styling from non-hero cards — preserves inline gradient on hero */
+  .bd-left .card:not(.bd-hero){border-radius:0!important;border:none!important;border-bottom:1px solid var(--border)!important;background:transparent!important;padding:1rem 1.4rem}
   /* Right col: scrollable detail */
   .bd-right{flex:1;min-width:0;padding:1.35rem 2rem 3rem;display:flex;flex-direction:column;gap:1rem;overflow-y:auto}
   /* 4-wide move grid in right col */
   .bd-right .bd-moves{grid-template-columns:repeat(4,1fr);gap:10px}
-  .bd-right .bd-move{height:60px;min-height:60px;max-height:60px;border-radius:12px}
+  .bd-right .bd-move{height:60px;min-height:60px;max-height:60px;border-radius:12px;cursor:pointer}
+  /* Hex chart: bigger in the wide right col */
+  .bd-right .bs-hex-wrap{display:flex;justify-content:center}
+  .bd-right .bs-hex-svg{max-width:460px}
 
   /* ── Teams list: auto-fill so 1 team = full width, 2+ = 2 cols ── */
   .tml-stack{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:1.25rem;padding:1.25rem 2.5rem 2rem}
