@@ -3580,20 +3580,31 @@ body.share-loading [onclick="tdPillShare()"]::after{
   .nat-hybrid-grid{grid-template-columns:repeat(5,1fr)!important;padding:.7rem 1.5rem 2rem;gap:.65rem}
   /* Archetype list: 3-column */
   .ref-arch-list{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;padding:.7rem 1.5rem 2rem}
-  /* Reference detail sheet → use our existing panel-ct/sec rules (already handled) */
+  /* Reference detail sheet → centred modal on desktop */
+  .ref-det-ov{align-items:center;justify-content:center}
+  .ref-det-sheet{border-radius:20px!important;max-height:82vh;width:520px;max-width:90vw;transform:translateY(16px) scale(.97);padding-bottom:1.5rem}
+  .ref-det-ov.open .ref-det-sheet{transform:translateY(0) scale(1)}
+  .ref-det-handle{display:none}
 
-  /* ── Profile page ── */
-  /* Wider section padding */
-  .prof-sec{padding:0 1.5rem}
-  .prof-sec-head{padding:.85rem 0}
-  /* Trainer card: more horizontal space */
-  .trainer-card{padding:1.5rem 2rem;border-radius:18px}
-  /* Stats row: never wrap on desktop */
-  .tc-stats{flex-wrap:nowrap;gap:1.8rem}
-  /* Social stats: wider items */
-  .prof-social-stats{padding:.85rem 1.5rem .65rem;gap:.85rem}
-  /* Achievements: 3-col min on desktop */
-  .ach-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.85rem;padding:.5rem 0 1.5rem}
+  /* ── Profile page: 2-col desktop layout ── */
+  #profileContent{display:flex;flex-direction:row;align-items:flex-start;gap:1.5rem;padding:1rem 1.5rem 3rem!important}
+  .prof-left{width:380px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;display:flex;flex-direction:column;gap:.75rem}
+  .prof-right{flex:1;min-width:0}
+  /* Trainer card: fills left col, good horizontal space */
+  .trainer-card{padding:1.5rem 1.75rem;border-radius:18px}
+  /* Stats row: never wrap */
+  .tc-stats{flex-wrap:nowrap;gap:1.5rem}
+  /* Social stats: flush in left col */
+  .prof-social-stats{padding:.6rem 0 .25rem;gap:.7rem}
+  /* Friends: card style in left col */
+  .fr-collapse{border-radius:12px;border:1px solid var(--border);background:var(--card);margin:0}
+  /* Right col section headers */
+  .prof-right .prof-sec-hdr{padding:.85rem 0}
+  /* Achievements: 3-col auto-fill */
+  .ach-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.8rem;padding:.5rem 0 1.5rem}
+  /* Flush padding on right-col inner content */
+  .prof-right .prof-account-actions{padding:.5rem 0 1.5rem}
+  .prof-right .activity-list{padding:.2rem 0 .5rem}
 }
 
 /* ═══════ WIDESCREEN (1600px+) ═══════ */
